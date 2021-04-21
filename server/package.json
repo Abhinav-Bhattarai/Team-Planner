@@ -1,0 +1,31 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "Backend for testing-react-app",
+  "main": "server.js",
+  "scripts": {
+    "start": "nodemon server.js",
+    "client": "cd ../client && npm start",
+    "dev": "concurrently \"npm start\" \"npm run client\""
+  },
+  "author": "Abhinav Bhattarai",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "bcrypt": "^5.0.1",
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "express-graphql": "^0.12.0",
+    "graphql": "^15.5.0",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.12.5",
+    "redis": "^3.1.2",
+    "socket.io": "^2.3.0"
+  },
+  "devDependencies": {
+    "concurrently": "^6.0.2",
+    "dotenv": "^8.2.0",
+    "nodemon": "^2.0.7"
+  }
+}
