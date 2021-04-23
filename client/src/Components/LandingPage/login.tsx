@@ -1,5 +1,6 @@
 import React from "react";
 import "./login.scss";
+import GithubLogo from '../../assets/github.svg';
 
 interface LoginProps {
   username: string;
@@ -12,7 +13,11 @@ interface LoginProps {
 }
 
 const LoginHeader = () => {
-  return <header className="LoginCard-Header">Login</header>;
+  return (
+    <header className="LoginCard-Header">
+      <img src={GithubLogo} width='50px' height='50px' alt='github-logo'/>
+    </header>
+  );
 };
 
 const LoginForm: React.FC<LoginProps> = (props) => {
@@ -41,17 +46,23 @@ const LoginForm: React.FC<LoginProps> = (props) => {
   );
 };
 
+const SignupRouter: React.FC<{Submit: () => void}> = ({ Submit }) => {
+  return <button id='create-account-btn' onClick={Submit}>Create Account</button>
+}
+
 const LoginCard: React.FC<{}> = (props) => {
   return <main className="LoginCard"> {props.children} </main>;
 };
 
 const Login: React.FC<LoginProps> = (props) => {
+  console.log(props);
   return (
     <React.Fragment>
       <main className="login-container">
         <LoginCard>
           <LoginHeader />
           <LoginForm {...props} />
+          <SignupRouter Submit={() => console.log('hello')}/>
         </LoginCard>
       </main>
     </React.Fragment>
