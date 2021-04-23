@@ -1,5 +1,6 @@
 import axios from "axios";
 import React, { Suspense, useEffect, useState } from "react";
+import { BrowserRouter } from "react-router-dom";
 import LoadingPage from "./Components/UI/loadingPage";
 import Context from "./Containers/Context";
 
@@ -30,14 +31,18 @@ const AuthenticationGuard: React.FC<AuthGuardProps> = (props) => {
       // @ts-ignore
       <Context.Provider value={{ userInfo }}>
         <Suspense fallback={() => <LoadingPage/>}>
-          <AsyncMainPage ChangeAuthentication={ChangeAuthentication} />
+          <BrowserRouter>
+            <AsyncMainPage ChangeAuthentication={ChangeAuthentication} />
+          </BrowserRouter>
         </Suspense>
       </Context.Provider>
     );
   }
   return (
     <Suspense fallback={() => <LoadingPage/>}>
-      <AsyncLandingPage ChangeAuthentication={ChangeAuthentication}/>
+      <BrowserRouter>
+        <AsyncLandingPage ChangeAuthentication={ChangeAuthentication}/>
+      </BrowserRouter>
     </Suspense>
   );
 };
@@ -69,7 +74,9 @@ function App() {
     HandleAuthentication();
   }, []);
 
-  const ChangeAuthentication = (type: boolean): void => {};
+  const ChangeAuthentication = (type: boolean): void => {
+    
+  };
 
   if (auth_status === null) {
     return <LoadingPage />;

@@ -1,4 +1,5 @@
 import React from 'react';
+import './signup.scss';
 
 interface SignupProps {
     username: string;
@@ -19,7 +20,9 @@ interface SignupProps {
 const Signup: React.FC<SignupProps> = (props) => {
     return (
         <React.Fragment>
-            
+            <div className='signup-container'>
+              <h1>Signup</h1>
+            </div>
         </React.Fragment>
     )
 }
