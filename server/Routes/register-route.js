@@ -21,7 +21,7 @@ router.post('/', RegisterValidationCheck, async(req, res) => {
         if (!err) {
             const RegistrationData = new RegistrationModel(Data);
             const response = await RegistrationData.save();
-            return res.json({...Data, token, userID: response._id});
+            return res.json({...Data, token, userID: response._id, error: false});
         }
         return {error: true};
     })

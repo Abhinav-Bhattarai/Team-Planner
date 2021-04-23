@@ -21,7 +21,7 @@ router.post("/", LoginCredentialCheck, async (req, res) => {
     const HashCheck = await bcrypt.compare(Password, response.Password);
     if (HashCheck) {
       const token = await jwt.sign(DATA, process.env.JWT_AUTH_TOKEN);
-      return res.json({...DATA, token});
+      return res.json({...DATA, token, invalid_credential: false});
     } else {
       return res.json({ invalid_credential: true });
     }
