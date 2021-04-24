@@ -12,11 +12,11 @@ import {
 
 interface LoginProps {
   username: string;
-  username_err: string | any;
+  username_err: string | undefined;
   password: string;
-  password_err: string | any;
-  ChangeUsername: (value: string) => void;
-  ChangePassword: (value: string) => void;
+  password_err: string | undefined;
+  ChangeUsername: any;
+  ChangePassword: any;
   Submit: () => void;
   id?: string;
 }
@@ -32,15 +32,19 @@ const Login: React.FC<LoginProps> = (props) => {
           <Form Submit={props.Submit} id="form">
             <FormInput
               type="text"
-              name="username"
+              name="username_login"
               id="login-username"
               placeholder="Username"
+              value={props.username}
+              handleChange={props.ChangeUsername}
             />
             <FormInput
               type="password"
-              name="password"
+              name="password_login"
               id="login-password"
               placeholder="Password"
+              value={props.password}
+              handleChange={props.ChangePassword}
             />
             <SubmitButton type="Login" />
           </Form>

@@ -7,6 +7,8 @@ interface FormInputProps {
   name: string;
   id: string;
   placeholder: string;
+  value: string;
+  handleChange: () => void;
 }
 
 interface FormProps {
@@ -39,7 +41,7 @@ export const Card: React.FC<{}> = (props) => {
 };
 
 export const FormInput: React.FC<FormInputProps> = (props) => {
-  const { type, name, id, placeholder } = props;
+  const { type, name, id, placeholder, value, handleChange } = props;
   return (
     <>
       <label htmlFor={name}>{placeholder}</label>
@@ -49,6 +51,8 @@ export const FormInput: React.FC<FormInputProps> = (props) => {
         id={id}
         className="input"
         placeholder={placeholder}
+        value={value}
+        onChange={handleChange}
       />
     </>
   );
