@@ -1,10 +1,10 @@
 import React from 'react';
-// import { ApolloClient, ApolloProvider, InMemoryCache } from '@apollo/client';
+import { ApolloClient, ApolloProvider, InMemoryCache } from '@apollo/client';
 
-// const client = new ApolloClient({
-//     uri: 'http://localhost:8000/graphql',
-//     cache: new InMemoryCache()
-// });
+const client = new ApolloClient({
+    uri: 'http://localhost:8000/graphql',
+    cache: new InMemoryCache()
+});
 
 interface PROPS {
     ChangeAuthentication: (type: boolean) => void;
@@ -13,9 +13,9 @@ interface PROPS {
 const MainPage: React.FC<PROPS> = props => {
     return (
         <React.Fragment>
-            {/* <ApolloProvider client={client}>
-            
-            </ApolloProvider> */}
+            <ApolloProvider client={client}>
+
+            </ApolloProvider>
         </React.Fragment>
     )
 };
