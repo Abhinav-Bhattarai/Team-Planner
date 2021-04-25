@@ -1,7 +1,7 @@
 import axios from "axios";
 import React, { Suspense, useEffect, useState } from "react";
 import { BrowserRouter } from "react-router-dom";
-import LoadingPage from "./Components/UI/loadingPage";
+import LoadingPage from "./Components/UI/LoadingPage/loadingPage";
 import Context from "./Containers/Context";
 
 const AsyncMainPage = React.lazy(() => {

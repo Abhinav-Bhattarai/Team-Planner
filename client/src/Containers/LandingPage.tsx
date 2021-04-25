@@ -2,7 +2,7 @@ import axios from "axios";
 import React, { Suspense, useState } from "react";
 import { Route, Switch } from "react-router-dom";
 import { useFormik } from "formik";
-import LoadingPage from "../Components/UI/loadingPage";
+import LoadingPage from "../Components/UI/LoadingPage/loadingPage";
 
 const AsyncLogin = React.lazy(() => {
   return import("../Components/LandingPage/login");

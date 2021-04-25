@@ -1,6 +1,6 @@
 import React from 'react';
 
-const LoadingPage = () => {
+const Spinner = () => {
     return (
         <React.Fragment>
             
@@ -8,4 +8,4 @@ const LoadingPage = () => {
     )
 };
 
-export default LoadingPage;
+export default Spinner;
