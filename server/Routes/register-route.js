@@ -17,11 +17,12 @@ router.post('/', RegisterValidationCheck, async(req, res) => {
     const { Username, Password, Phone } = req.body;
     const HashedPassword = await HashPassword(Password);
     const Data = { Username, Password: HashedPassword, Phone };
-    jwt.sign(Data, process.env.JWT_AUTH_TOKEN, async(err, token) => {
+    const RegistrationData = new RegistrationModel(Data);
+    const response = await RegistrationData.save();
+    const Serialized_Data = {...Data, userID: response._id, error: false};
+    jwt.sign(Serialized_Data, process.env.JWT_AUTH_TOKEN, async(err, token) => {
         if (!err) {
-            const RegistrationData = new RegistrationModel(Data);
-            const response = await RegistrationData.save();
-            return res.json({...Data, token, userID: response._id, error: false});
+            return res.json({...Serialized_Data, token});
         }
         return {error: true};
     })

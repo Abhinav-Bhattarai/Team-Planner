@@ -10,6 +10,7 @@ import dotenv from 'dotenv';
 import MainSchema from './Schema/MainSchema.js';
 import LoginRoute from './Routes/login-route.js';
 import RegisterRoute from './Routes/register-route.js';
+import CheckJWTRoute from './Routes/check-jwt.js';
 dotenv.config();
 
 const app = express();
@@ -39,6 +40,7 @@ app.use('/graphql', ExpressGrpahQL({
 // api endpoints;
 app.use('/login', LoginRoute);
 app.use('/signup', RegisterRoute);
+app.use('/check-auth', CheckJWTRoute);
 
 // mongoDB connection;
 mongoose.connect(process.env.MONGO_URI, {useNewUrlParser: true, useUnifiedTopology: true}).then(() => {

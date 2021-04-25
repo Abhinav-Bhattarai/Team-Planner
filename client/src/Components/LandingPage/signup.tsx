@@ -24,6 +24,7 @@ interface SignupProps {
   ChangeConfirm: any;
   ChangePhone: any;
   Submit: () => void;
+  spinner: boolean;
 }
 
 const Signup: React.FC<SignupProps> = (props) => {
@@ -69,7 +70,7 @@ const Signup: React.FC<SignupProps> = (props) => {
               value={props.phone}
               handleChange={props.ChangePhone}
             />
-            <SubmitButton type="Signup" />
+            <SubmitButton type="Signup" spinner={props.spinner}/>
           </Form>
           <RouteChanger
             type="Already have an account ?"
@@ -81,4 +82,4 @@ const Signup: React.FC<SignupProps> = (props) => {
   );
 };
 
-export default Signup;
+export default React.memo(Signup);

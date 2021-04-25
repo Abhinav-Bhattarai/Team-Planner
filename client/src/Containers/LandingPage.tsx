@@ -1,7 +1,7 @@
 import axios from "axios";
-import React, { Suspense } from "react";
+import React, { Suspense, useState } from "react";
 import { Route, Switch } from "react-router-dom";
-import { useFormik } from 'formik';
+import { useFormik } from "formik";
 import LoadingPage from "../Components/UI/loadingPage";
 
 const AsyncLogin = React.lazy(() => {
@@ -26,93 +26,121 @@ interface SignupCred {
   password_signup: string;
   confirm_signup: string;
   phone_signup: string;
-};
+}
 
 interface LoginCred {
   username_login: string;
   password_login: string;
 }
 
+const SignupValues = {
+  username_signup: "",
+  password_signup: "",
+  confirm_signup: "",
+  phone_signup: "",
+};
+
+const LoginValues = {
+  username_login: "",
+  password_login: "",
+};
+
+const LoginHandler = async (
+  credentials: LoginCred,
+  ChangeAuthentication: (type: boolean) => void
+): Promise<boolean | undefined> => {
+  const { username_login, password_login } = credentials;
+  if (username_login.length > 3 && password_login.length > 7) {
+    const number_regex = /[0-9]/;
+    if (number_regex.exec(password_login) !== null) {
+      const context = {
+        Username: username_login,
+        Password: password_login,
+      };
+      const { data } = await axios.post("/login", context);
+      // exception Handling;
+      if (data.invalid_credential === false) {
+        localStorage.setItem("Username", data.Username);
+        localStorage.setItem("userID", data.userID);
+        localStorage.setItem("auth-token", data.token);
+        ChangeAuthentication(true);
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  } else {
+    return false;
+  }
+};
+
+const SignupHandler = async (
+  credentials: SignupCred,
+  ChangeAuthentication: (type: boolean) => void
+): Promise<boolean | undefined> => {
+  const {
+    username_signup,
+    password_signup,
+    confirm_signup,
+    phone_signup,
+  } = credentials;
+  if (
+    username_signup.length > 3 &&
+    password_signup === confirm_signup &&
+    password_signup.length > 7 &&
+    phone_signup.length > 9
+  ) {
+    const number_regex = /[0-9]/;
+    if (number_regex.exec(password_signup) !== null) {
+      const context = {
+        Username: username_signup,
+        Password: password_signup,
+        Confirm: confirm_signup,
+        Phone: phone_signup,
+      };
+      const { data } = await axios.post("/signup", context);
+      if (data.error === false) {
+        localStorage.setItem("Username", data.Username);
+        localStorage.setItem("auth-token", data.token);
+        localStorage.setItem("userID", data.userID);
+        ChangeAuthentication(true);
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  } else {
+    return false;
+  }
+};
+
 const LandingPage: React.FC<PROPS> = ({ ChangeAuthentication }) => {
+  const [signup_spinner, SetSignupSpinner] = useState<boolean>(false);
+  const [login_spinner, SetLoginSpinner] = useState<boolean>(false);
 
   const formik_signup = useFormik({
-    initialValues: {
-      confirm_signup: '',
-      username_signup: '',
-      password_signup: '',
-      phone_signup: ''
+    initialValues: SignupValues,
+    onSubmit: async (values) => {
+      SetSignupSpinner(true);
+      const response = await SignupHandler(values, ChangeAuthentication);
+      response && SetSignupSpinner(response);
     },
-
-    onSubmit: (values) => {
-      SignupHandler(values);
-    },
-
     validate: (values) => {
       let errors = {};
-      return errors
-    }
+      return errors;
+    },
   });
 
   const formik_login = useFormik({
-    initialValues: {
-      username_login: '',
-      password_login: '',
+    initialValues: LoginValues,
+    onSubmit: async (values) => {
+      SetLoginSpinner(true);
+      const response = await LoginHandler(values, ChangeAuthentication);
+      response && SetLoginSpinner(response);
     },
-
-    onSubmit: (values) => {
-      LoginHandler(values)
-    }
   });
-  
-  console.log(formik_signup);
-
-  const SignupHandler = async (credentials: SignupCred): Promise<void> => {
-    const { username_signup, password_signup, confirm_signup, phone_signup } = credentials;
-    if (
-      username_signup.length > 3 &&
-      password_signup === confirm_signup &&
-      password_signup.length > 7 &&
-      phone_signup.length > 9
-    ) {
-      const number_regex = /[0-9]/;
-      if (number_regex.exec(password_signup) !== null) {
-        const context = {
-          Username: username_signup,
-          Password: password_signup,
-          Confirm: confirm_signup,
-          Phone: phone_signup,
-        };
-        const { data } = await axios.post("/signup", context);
-        if (data.error === false) {
-          localStorage.setItem('Username', data.Username);
-          localStorage.setItem('auth-token', data.token);
-          localStorage.setItem('userID', data.userID);
-          ChangeAuthentication(true);
-        }
-      } 
-    }
-  };
-
-  const LoginHandler = async (credentials: LoginCred): Promise<void> => {
-    const { username_login, password_login } = credentials;
-    if (username_login.length > 3 && password_login.length > 7) {
-      const number_regex = /[0-9]/;
-      if (number_regex.exec(password_login) !== null) {
-        const context = {
-          Username: username_login,
-          Password: password_login,
-        };
-        const { data } = await axios.post("/login", context);
-        // exception Handling;
-        if (data.invalid_credential === false) {
-          localStorage.setItem("Username", data.Username);
-          localStorage.setItem("userID", data.userID);
-          localStorage.setItem("auth-token", data.token);
-          ChangeAuthentication(true);
-        }
-      }
-    }
-  };
 
   return (
     <React.Fragment>
@@ -131,6 +159,7 @@ const LandingPage: React.FC<PROPS> = ({ ChangeAuthentication }) => {
                   ChangePassword={formik_login.handleChange}
                   ChangeUsername={formik_login.handleChange}
                   Submit={formik_login.handleSubmit}
+                  spinner={login_spinner}
                 />
               </Suspense>
             );
@@ -139,7 +168,6 @@ const LandingPage: React.FC<PROPS> = ({ ChangeAuthentication }) => {
 
         <Route
           exact
-
           path="/signup"
           render={() => {
             return (
@@ -158,6 +186,7 @@ const LandingPage: React.FC<PROPS> = ({ ChangeAuthentication }) => {
                   ChangePhone={formik_signup.handleChange}
                   ChangeConfirm={formik_signup.handleChange}
                   Submit={formik_signup.handleSubmit}
+                  spinner={signup_spinner}
                 />
               </Suspense>
             );
@@ -176,6 +205,7 @@ const LandingPage: React.FC<PROPS> = ({ ChangeAuthentication }) => {
                   ChangePassword={formik_login.handleChange}
                   ChangeUsername={formik_login.handleChange}
                   Submit={formik_login.handleSubmit}
+                  spinner={login_spinner}
                 />
               </Suspense>
             );
@@ -186,4 +216,4 @@ const LandingPage: React.FC<PROPS> = ({ ChangeAuthentication }) => {
   );
 };
 
-export default LandingPage;
+export default React.memo(LandingPage);

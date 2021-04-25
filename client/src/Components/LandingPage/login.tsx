@@ -19,6 +19,7 @@ interface LoginProps {
   ChangePassword: any;
   Submit: () => void;
   id?: string;
+  spinner: boolean;
 }
 
 const Login: React.FC<LoginProps> = (props) => {
@@ -46,7 +47,7 @@ const Login: React.FC<LoginProps> = (props) => {
               value={props.password}
               handleChange={props.ChangePassword}
             />
-            <SubmitButton type="Login" />
+            <SubmitButton type="Login" spinner={props.spinner}/>
           </Form>
           <RouteChanger
             type="Create Account"
@@ -58,4 +59,4 @@ const Login: React.FC<LoginProps> = (props) => {
   );
 };
 
-export default Login;
+export default React.memo(Login);

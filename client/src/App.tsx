@@ -31,18 +31,14 @@ const AuthenticationGuard: React.FC<AuthGuardProps> = (props) => {
       // @ts-ignore
       <Context.Provider value={{ userInfo }}>
         <Suspense fallback={() => <LoadingPage/>}>
-          <BrowserRouter>
-            <AsyncMainPage ChangeAuthentication={ChangeAuthentication} />
-          </BrowserRouter>
+          <AsyncMainPage ChangeAuthentication={ChangeAuthentication} />
         </Suspense>
       </Context.Provider>
     );
   }
   return (
     <Suspense fallback={() => <LoadingPage/>}>
-      <BrowserRouter>
-        <AsyncLandingPage ChangeAuthentication={ChangeAuthentication}/>
-      </BrowserRouter>
+      <AsyncLandingPage ChangeAuthentication={ChangeAuthentication}/>
     </Suspense>
   );
 };
@@ -56,9 +52,11 @@ function App() {
       const Username: string | null = localStorage.getItem("Username");
       const userID: string | null = localStorage.getItem("userID");
       const auth_token: string | null = localStorage.getItem("auth-token");
+      console.log({Username, userID, auth_token})
       if (Username && userID && auth_token) {
         const context = { token: auth_token, userID };
-        const response = await axios.post("/check-jwt", context);
+        const response = await axios.post("/check-auth", context);
+        console.log(response.data);
         if (response.data.access === true) {
           SetUserInfo({ Username, userID, auth_token });
           SetAuthStatus(true);
@@ -75,7 +73,8 @@ function App() {
   }, []);
 
   const ChangeAuthentication = (type: boolean): void => {
-    
+    type === false && localStorage.clear();
+    SetAuthStatus(type);
   };
 
   if (auth_status === null) {
@@ -84,11 +83,13 @@ function App() {
 
   return (
     <React.Fragment>
-      <AuthenticationGuard
-        auth_status={auth_status}
-        ChangeAuthentication={(type: boolean) => ChangeAuthentication(type)}
-        userInfo={userInfo}
-      />
+      <BrowserRouter>
+        <AuthenticationGuard
+          auth_status={auth_status}
+          ChangeAuthentication={(type: boolean) => ChangeAuthentication(type)}
+          userInfo={userInfo}
+        />
+      </BrowserRouter>
     </React.Fragment>
   );
 }

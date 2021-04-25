@@ -14,7 +14,7 @@ interface FormInputProps {
 interface FormProps {
   Submit: () => void;
   id: string;
-}
+};
 
 export const MainContainer: React.FC<{}> = (props) => {
   return <main className="container">{props.children}</main>;
@@ -58,7 +58,7 @@ export const FormInput: React.FC<FormInputProps> = (props) => {
   );
 };
 
-export const SubmitButton: React.FC<{ type: string }> = ({ type }) => {
+export const SubmitButton: React.FC<{ type: string, spinner: boolean }> = ({ type, spinner }) => {
   return (
     <button type="submit" id="login-btn">
       {type}
