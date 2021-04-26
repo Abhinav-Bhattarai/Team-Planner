@@ -22,7 +22,7 @@ const UserSchema = new GraphQLObjectType({
 
 const GroupSchema = new GraphQLObjectType({
   name: "GroupSchema",
-  field: () => {
+  fields: () => {
     return {
       _id: { type: GraphQLString },
       Name: { type: GraphQLString },
@@ -53,10 +53,10 @@ const RootQuery = new GraphQLObjectType({
 
     FetchTeamData: {
       type: GroupSchema,
-      args: { groupID: { type: GraphQLString } },
+      args: { teamID: { type: GraphQLString } },
       resolve: async (_, args) => {
-        const { groupID } = args;
-        const response = await GroupModel.findById(groupID);
+        const { teamID } = args;
+        const response = await GroupModel.findById(teamID);
         if (response) {
           const data = { ...response };
           delete data.__v;
@@ -68,7 +68,7 @@ const RootQuery = new GraphQLObjectType({
 });
 
 const MainSchema = new GraphQLSchema({
-  query: RootQuery,
+  query: RootQuery
 });
 
 export default MainSchema;

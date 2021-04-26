@@ -1,6 +1,88 @@
 .sidebar-container {
+  flex: 1;
+  background-color: #2f3136;
+  display: flex;
+  flex-direction: column;
+}
+
+.search-bar-rel-container {
+  display: flex;
+  position: relative;
+  padding: 10px 0;
+  align-items: center;
+  justify-content: center;
+
+  #sidebar-search {
     flex: 1;
-    background-color: beige;
-    display: flex;
-    flex-direction: column;
+    margin: 0 2%;
+    padding: 13px 4%;
+    border: none;
+    border-radius: 5px;
+    color: grey;
+    background-color: rgb(32, 34, 37);
+    &:focus {
+      outline: none;
+    }
+  }
+}
+
+.personal-info-header {
+  padding: 15px 3%;
+  background-color: #292b2f;
+  display: flex;
+  align-items: center;
+
+  img {
+    background-color: #fff;
+    border-radius: 15px;
+    border: 1px solid #fff;
+  }
+
+  div {
+    color: #fff;
+    margin-left: 5%;
+    font-size: 18px;
+
+    &::before {
+      content: "@";
+      color: #fff;
+    }
+  }
+}
+
+.activity-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  margin-top: 5px;
+
+  button {
+    flex: 1;
+    padding: 8px 0;
+    margin: 0 2%;
+    border-radius: 5px;
+    border: none;
+  }
+
+  #ac-btn-1 {
+    background-color: #44b581;
+    color: #fefefe;
+    transition: 0.3s;
+
+    &:hover {
+      background-color: #3ecc8a;
+      transform: scale(1.03);
+    }
+  }
+
+  #ac-btn-2 {
+    background-color: rgb(115, 137, 218);
+    color: #fefefe;
+    transition: 0.3s;
+
+    &:hover {
+      background-color: rgb(136, 159, 241);
+      transform: scale(1.03);
+    }
+  }
 }
