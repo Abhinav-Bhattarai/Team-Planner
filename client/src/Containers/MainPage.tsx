@@ -5,8 +5,10 @@ import {
   InMemoryCache,
   useLazyQuery,
   useQuery,
+  useMutation
 } from "@apollo/client";
 import { MainContainer } from "../Components/MainPage/Reusables/reusables";
+import { JoinTeamGQL } from './gql-calls/mutations';
 import SideBar, {
   ActivityContainer,
   PersonalInformationHeader,
@@ -20,6 +22,7 @@ import TeamCard from "../Components/MainPage/Sidebar/TeamCard/team-card";
 import DummyLogo from "../assets/github.svg";
 import DefaultLogo from "../assets/default.svg";
 import Context from "./Context";
+import Spinner from "../Components/UI/Spinner/spinner";
 
 const client = new ApolloClient({
   uri: "http://localhost:8000/graphql",
@@ -47,7 +50,37 @@ interface TeamListObject {
 }
 
 const NoDataPage = () => {
-  return <main></main>;
+  return (
+    <main
+      style={{
+        flex: 1,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexDirection: "column",
+      }}
+    >
+      <img src={DefaultLogo} alt="default" width="60%" height="350px" />
+      <div style={{ color: "grey", fontSize: "18px", fontWeight: 700 }}>
+        You are Lonely ...
+      </div>
+    </main>
+  );
+};
+
+const MainViewLoader = () => {
+  return (
+    <main
+      style={{
+        flex: 1,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Spinner />
+    </main>
+  );
 };
 
 const NoDataSideBar = () => {
@@ -62,7 +95,9 @@ const NoDataSideBar = () => {
       }}
     >
       <img src={DefaultLogo} alt="default" width="250px" height="250px" />
-      <div style={{color: 'grey', fontSize: '16px'}}>No Team Joined ...</div>
+      <div style={{ color: "grey", fontSize: "16px", fontWeight: 600 }}>
+        No Team Joined ...
+      </div>
     </main>
   );
 };
@@ -71,34 +106,70 @@ const MainPage: React.FC<PROPS> = (props) => {
   const { userInfo } = useContext(Context);
   const [team_list, SetTeamList] = useState<null | Array<TeamListObject>>([]);
   const [search_value, SetSearchValue] = useState<string>("");
+  const [team_data, SetTeamData] = useState<null | Array<{}>>(null);
+  const [join_team_popup, SetJoinTeamPopup] = useState<boolean>(false);
+  const [create_team_popup, SetCreateTeamPopup] = useState<boolean>(false);
+  const [join_team_id, SetJoinTeamID] = useState<string>("");
+  const [create_team_id, SetCreateTeamID] = useState<string>("");
 
+  // graphQL queries;
   const TeamListGQL = useQuery(FetchTeams, {
     variables: {
       // @ts-ignore
       userID: userInfo.userID,
     },
+
     fetchPolicy: "cache-and-network",
-    onCompleted: (data) => {
+
+    onCompleted: (data: any) => {
       const { FetchTeams } = data;
-      SetTeamList(JSON.parse(FetchTeams.GroupsJoined));
+      const SerializedData = JSON.parse(FetchTeams.GroupsJoined);
+      SetTeamList(SerializedData);
+      SerializedData.length > 0 &&
+        TeamData({ variables: { teamID: SerializedData[0].GroupID } });
+      SerializedData.length === 0 && SetTeamData([]);
     },
-    onError: (err) => {},
+
+    onError: (err: any) => {},
   });
 
   const [TeamData, { loading }] = useLazyQuery(FetchTeamData, {
-    onCompleted: (data) => {},
+    onCompleted: (data) => {
+      const { FetchTeamData } = data;
+    },
+
     fetchPolicy: "cache-and-network",
+
     onError: (err) => {},
   });
+
+  // graphQL Mutations
+
+  const [JoinTeam, {}] = useMutation(JoinTeamGQL);
+
+  // graphQL helper functions;
 
   const ChangeSearchValue = (event: any) => {
     const value = event.target.value;
     SetSearchValue(value);
   };
 
-  const JoinTeamHandler = () => {};
+  const JoinTeamHandler = (teamID: string) => {
+    if (join_team_id.length > 0) {
+      JoinTeam({
+        variables: {
+          // @ts-ignore
+          userID: userInfo.userID,
+          teamID: teamID
+        }
+      });
+    }
+  };
 
-  const CreateTeamHandler = () => {};
+  const CreateTeamHandler = () => {
+    if (create_team_id.length > 0) {
+    }
+  };
 
   const MainViewRouter = () => {
     return (
@@ -136,8 +207,6 @@ const MainPage: React.FC<PROPS> = (props) => {
     }
   }
 
-  console.log(TeamCardContainer);
-
   return (
     <React.Fragment>
       <MainContainer>
@@ -148,13 +217,19 @@ const MainPage: React.FC<PROPS> = (props) => {
             ChangeValue={(e: any) => ChangeSearchValue(e)}
           />
           <ActivityContainer
-            JoinTeamHandler={JoinTeamHandler}
-            CreateTeamHandler={CreateTeamHandler}
+            JoinTeamHandler={() => SetJoinTeamPopup(!join_team_popup)}
+            CreateTeamHandler={() => SetCreateTeamPopup(!create_team_popup)}
           />
           {TeamCardContainer}
         </SideBar>
         <MainView>
-          {TeamListGQL.loading === false ? <MainViewRouter /> : <NoDataPage />}
+          {loading === true || team_data === null ? (
+            <MainViewLoader />
+          ) : team_data.length > 0 ? (
+            <MainViewRouter />
+          ) : (
+            <NoDataPage />
+          )}
         </MainView>
         <HelperBar />
       </MainContainer>
