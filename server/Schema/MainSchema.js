@@ -67,8 +67,43 @@ const RootQuery = new GraphQLObjectType({
   },
 });
 
+const Mutation = new GraphQLObjectType({
+  name: 'Mutation',
+  fields: {
+    JoinTeam: {
+      type: UserSchema,
+      args: {teamID: {type: GraphQLString}, userID: {type: GraphQLString}},
+      resolve: async(_, args) => {
+        const { teamID, userID } = args;
+        const Team = await GroupModel.findById(teamID);
+        if (Team) {
+          const User = await RegistrationModel.findOne({_id: userID});
+          const Serialized_Data = { GroupID: Team._id, Name: Team.Name, GroupProfile: Team.GroupProfile }
+          User.GroupsJoined.push(Serialized_Data);
+          const response = await User.save();
+          return {GroupsJoined: JSON.stringify(response.GroupsJoined)}
+        }
+      }
+    },
+
+    CreateTeam: {
+      type: GroupSchema,
+      args: {
+        Name: {type: GraphQLString},
+        Admin: {type: GraphQLString},
+        GroupProfile: {type: GraphQLString},
+        Members: {type: GraphQLString}
+      },
+      resolve: async (_, args) => {
+        const { Name, Admin, GroupProfile, Members } = args;
+      }
+    }
+  }
+})
+
 const MainSchema = new GraphQLSchema({
-  query: RootQuery
+  query: RootQuery,
+  mutation: Mutation
 });
 
 export default MainSchema;
