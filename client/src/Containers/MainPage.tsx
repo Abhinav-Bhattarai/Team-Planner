@@ -5,10 +5,10 @@ import {
   InMemoryCache,
   useLazyQuery,
   useQuery,
-  useMutation
+  useMutation,
 } from "@apollo/client";
 import { MainContainer } from "../Components/MainPage/Reusables/reusables";
-import { JoinTeamGQL } from './gql-calls/mutations';
+import { CreateTeamGQL, JoinTeamGQL } from "./gql-calls/mutations";
 import SideBar, {
   ActivityContainer,
   PersonalInformationHeader,
@@ -110,7 +110,8 @@ const MainPage: React.FC<PROPS> = (props) => {
   const [join_team_popup, SetJoinTeamPopup] = useState<boolean>(false);
   const [create_team_popup, SetCreateTeamPopup] = useState<boolean>(false);
   const [join_team_id, SetJoinTeamID] = useState<string>("");
-  const [create_team_id, SetCreateTeamID] = useState<string>("");
+  const [create_team_name, SetCreateTeamName] = useState<string>("");
+  const [create_team_profile, SetCreateTeamProfile] = useState<string>("");
 
   // graphQL queries;
   const TeamListGQL = useQuery(FetchTeams, {
@@ -146,6 +147,7 @@ const MainPage: React.FC<PROPS> = (props) => {
   // graphQL Mutations
 
   const [JoinTeam, {}] = useMutation(JoinTeamGQL);
+  const [CreateTeam, {}] = useMutation(CreateTeamGQL);
 
   // graphQL helper functions;
 
@@ -160,14 +162,22 @@ const MainPage: React.FC<PROPS> = (props) => {
         variables: {
           // @ts-ignore
           userID: userInfo.userID,
-          teamID: teamID
-        }
+          teamID: teamID,
+        },
       });
     }
   };
 
   const CreateTeamHandler = () => {
-    if (create_team_id.length > 0) {
+    if (create_team_name.length > 0 && create_team_profile.length > 10) {
+      CreateTeam({
+        variables: {
+          // @ts-ignore
+          Admin: userInfo.userID,
+          GroupProfile: create_team_profile,
+          Name: create_team_name,
+        },
+      });
     }
   };
 
@@ -210,7 +220,7 @@ const MainPage: React.FC<PROPS> = (props) => {
   return (
     <React.Fragment>
       <MainContainer>
-        <SideBar>
+        <SideBar blur={join_team_popup === true || create_team_popup === true}>
           <PersonalInformationHeader username={"hello"} source={DummyLogo} />
           <SearchBar
             value={search_value}
@@ -222,7 +232,7 @@ const MainPage: React.FC<PROPS> = (props) => {
           />
           {TeamCardContainer}
         </SideBar>
-        <MainView>
+        <MainView blur={join_team_popup === true || create_team_popup === true}>
           {loading === true || team_data === null ? (
             <MainViewLoader />
           ) : team_data.length > 0 ? (
@@ -231,7 +241,9 @@ const MainPage: React.FC<PROPS> = (props) => {
             <NoDataPage />
           )}
         </MainView>
-        <HelperBar />
+        <HelperBar
+          blur={join_team_popup === true || create_team_popup === true}
+        />
       </MainContainer>
     </React.Fragment>
   );

@@ -2,7 +2,7 @@ import React from "react";
 import "./reusable.scss";
 import GithubLogo from "../../../assets/github.svg";
 
-interface FormInputProps {
+export interface FormInputProps {
   type: "text" | "password";
   name: string;
   id: string;

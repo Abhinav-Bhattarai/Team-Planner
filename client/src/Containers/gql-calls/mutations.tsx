@@ -9,8 +9,8 @@ export const JoinTeamGQL = gql`
 `;
 
 export const CreateTeamGQL = gql`
-    mutation ($teamID: String!, $userID: String!) {
-        CreateTeam (teamID: $teamID, userID: $userID) {
+    mutation ($name: String!, $admin: String!, $groupProfile: String!) {
+        CreateTeam (Name: $name, Admin: $admin, GroupProfile: $groupProfile) {
             _id
         }
     }
