@@ -8,7 +8,7 @@ import {
   PopupTextInput,
 } from "./Reusables/reusables";
 
-const CreatePopup: React.FC<{ Submit: (event: any) => void }> = (props) => {
+const CreatePopup: React.FC<{ Submit: (event: any, name: string, profile: string) => void }> = (props) => {
   const { Submit } = props;
   const [name, SetName] = useState<string>("");
   const [profile, SetProfile] = useState<string>("");
@@ -40,7 +40,7 @@ const CreatePopup: React.FC<{ Submit: (event: any) => void }> = (props) => {
     <React.Fragment>
       <PopupContainer>
         <PopupHeader title="Create Team" />
-        <PopupForm Submit={Submit}>
+        <PopupForm Submit={(e: any) => Submit(e, name, profile)}>
           <PopupTextInput
             name="group-name"
             placeholder="Group Name"

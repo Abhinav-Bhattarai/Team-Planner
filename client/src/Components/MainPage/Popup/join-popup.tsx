@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { PopupButton, PopupContainer, PopupForm, PopupHeader, PopupTextInput } from "./Reusables/reusables";
 
-const JoinPopup: React.FC<{ SubmitForm: (event: any) => void }> = (props) => {
+const JoinPopup: React.FC<{ SubmitForm: (event: any, teamID: string) => void }> = (props) => {
   const { SubmitForm } = props;
   const [id, SetID] = useState<string>('');
   const HandleIDChange = (event: any) => {
@@ -13,7 +13,7 @@ const JoinPopup: React.FC<{ SubmitForm: (event: any) => void }> = (props) => {
     <React.Fragment>
       <PopupContainer>
         <PopupHeader title="Join Team" />
-        <PopupForm Submit={SubmitForm}>
+        <PopupForm Submit={(e: any) => SubmitForm(e, id)}>
           <PopupTextInput
             name="group-id"
             placeholder="Group ID"

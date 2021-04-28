@@ -111,9 +111,7 @@ const MainPage: React.FC<PROPS> = (props) => {
   const [team_data, SetTeamData] = useState<null | Array<{}>>(null);
   const [join_team_popup, SetJoinTeamPopup] = useState<boolean>(false);
   const [create_team_popup, SetCreateTeamPopup] = useState<boolean>(false);
-  const [join_team_id, SetJoinTeamID] = useState<string>("");
-  const [create_team_name, SetCreateTeamName] = useState<string>("");
-  const [create_team_profile, SetCreateTeamProfile] = useState<string>("");
+
 
   // graphQL queries;
   const TeamListGQL = useQuery(FetchTeams, {
@@ -139,6 +137,7 @@ const MainPage: React.FC<PROPS> = (props) => {
   const [TeamData, { loading }] = useLazyQuery(FetchTeamData, {
     onCompleted: (data) => {
       const { FetchTeamData } = data;
+      console.log(FetchTeamData, 'FetchTeamData')
     },
 
     fetchPolicy: "cache-and-network",
@@ -148,8 +147,11 @@ const MainPage: React.FC<PROPS> = (props) => {
 
   // graphQL Mutations
 
-  const [JoinTeam, {}] = useMutation(JoinTeamGQL);
-  const [CreateTeam, {}] = useMutation(CreateTeamGQL);
+  const [JoinTeam] = useMutation(JoinTeamGQL);
+  const [CreateTeam] = useMutation(CreateTeamGQL, {
+    onError: (err: any) => {
+    }
+  });
 
   // graphQL helper functions;
 
@@ -158,8 +160,10 @@ const MainPage: React.FC<PROPS> = (props) => {
     SetSearchValue(value);
   };
 
-  const JoinTeamHandler = (teamID: string) => {
-    if (join_team_id.length > 0) {
+  const JoinTeamHandler = (event: any, teamID: string) => {
+    event.preventDefault();
+    if (teamID.length > 2) {
+      SetJoinTeamPopup(false);
       JoinTeam({
         variables: {
           // @ts-ignore
@@ -170,17 +174,20 @@ const MainPage: React.FC<PROPS> = (props) => {
     }
   };
 
-  const CreateTeamHandler = () => {
-    if (create_team_name.length > 0 && create_team_profile.length > 10) {
+  const CreateTeamHandler = (event: any, team_name: string, team_profile: string ) => {
+    event.preventDefault();
+    if (team_name.length > 0 && team_profile.length > 10) {
+      SetCreateTeamPopup(false);
       CreateTeam({
         variables: {
           // @ts-ignore
-          Admin: userInfo.userID,
-          GroupProfile: create_team_profile,
-          Name: create_team_name,
+          admin: userInfo.userID,
+          groupProfile: team_profile,
+          name: team_name,
         },
       });
     }
+
   };
 
   const MainViewRouter = () => {

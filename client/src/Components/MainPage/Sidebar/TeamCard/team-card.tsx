@@ -1,4 +1,5 @@
 import React from "react";
+import './team-card.scss';
 
 interface TeamCardProps {
   TeamProfile: string;
@@ -19,7 +20,7 @@ const TeamCard: React.FC<TeamCardProps> = (props) => {
           src={TeamProfile}
           alt="profile-card"
         />
-        <h2>{TeamName}</h2>
+        <div>{TeamName}</div>
       </main>
     </React.Fragment>
   );

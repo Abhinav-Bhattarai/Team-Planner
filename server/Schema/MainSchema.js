@@ -6,7 +6,8 @@ const {
   GraphQLObjectType,
   GraphQLString,
   GraphQLInt,
-  GraphQLSchema
+  GraphQLSchema,
+  GraphQLBoolean
 } = require("graphql");
 
 const UserSchema = new GraphQLObjectType({
@@ -32,6 +33,7 @@ const GroupSchema = new GraphQLObjectType({
       GroupProfile: { type: GraphQLString },
       TodoList: { type: GraphQLString },
       RegistrationDate: { type: GraphQLString },
+      Status: { type: GraphQLBoolean }
     };
   },
 });
@@ -58,8 +60,16 @@ const RootQuery = new GraphQLObjectType({
         const { teamID } = args;
         const response = await GroupModel.findById(teamID);
         if (response) {
-          const data = { ...response };
-          delete data.__v;
+          const data = { 
+            _id: response._id,
+            Members: JSON.stringify(response.Members),
+            Admin: response.Admin,
+            Messages: JSON.stringify(response.Messages),
+            GroupProfile: response.GroupProfile,
+            TodoList: JSON.stringify(response.TodoList),
+            RegistrationDate: response.RegistrationDate,
+            Name: response.Name
+          };
           return data;
         }
       },
@@ -92,10 +102,20 @@ const Mutation = new GraphQLObjectType({
         Name: {type: GraphQLString},
         Admin: {type: GraphQLString},
         GroupProfile: {type: GraphQLString},
-        Members: {type: GraphQLString}
       },
       resolve: async (_, args) => {
-        const { Name, Admin, GroupProfile, Members } = args;
+        const { Name, Admin, GroupProfile } = args;
+        const Data = {
+          Name, Admin, GroupProfile
+        };
+        const User_Info = await RegistrationModel.findOne({_id: Admin});
+        if (User_Info) {
+          const TeamData = new GroupModel(Data);
+          const team_response = await TeamData.save();
+          User_Info.GroupsJoined.push({GroupID: team_response._id, GroupProfile, Name});
+          await User_Info.save();
+          return {Status: true};
+        }
       }
     }
   }

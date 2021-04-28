@@ -11,7 +11,14 @@ export const FetchTeams = gql`
 export const FetchTeamData = gql`
     query($teamID: String!) {
         FetchTeamData(teamID: $teamID) {
-            _id
+            _id,
+           Name,
+           Members,
+           Messages,
+           Admin,
+           TodoList,
+           RegistrationDate,
+           GroupProfile
         }
     }
 `;
