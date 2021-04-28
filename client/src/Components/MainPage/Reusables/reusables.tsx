@@ -1,10 +1,10 @@
 import React from 'react';
 import './reusables.scss';
 
-export const MainContainer: React.FC<{}> = (props) => {
-    const { children } = props;
+export const MainContainer: React.FC<{Click: (event: any) => void}> = (props) => {
+    const { children, Click } = props;
     return (
-        <main className='main-page-container'>
+        <main className='main-page-container' onClick={Click}>
             { children }
         </main>
     )

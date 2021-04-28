@@ -3,7 +3,7 @@ import "./helperbar.scss";
 
 const HelperBar: React.FC<{ blur: boolean }> = (props) => {
   const { blur, children } = props;
-  const blur_value = blur ? "0px" : "10px";
+  const blur_value = blur ? "10px" : "0px";
   return (
     <React.Fragment>
       <main

@@ -23,6 +23,8 @@ import DummyLogo from "../assets/github.svg";
 import DefaultLogo from "../assets/default.svg";
 import Context from "./Context";
 import Spinner from "../Components/UI/Spinner/spinner";
+import JoinPopup from "../Components/MainPage/Popup/join-popup";
+import CreatePopup from "../Components/MainPage/Popup/create-popup";
 
 const client = new ApolloClient({
   uri: "http://localhost:8000/graphql",
@@ -217,9 +219,16 @@ const MainPage: React.FC<PROPS> = (props) => {
     }
   }
 
+  const RemovePopup = (event: any) => {
+    join_team_popup && SetJoinTeamPopup(false);
+    create_team_popup && SetCreateTeamPopup(false);
+  };
+
   return (
     <React.Fragment>
-      <MainContainer>
+      {join_team_popup && <JoinPopup SubmitForm={JoinTeamHandler} />}
+      {create_team_popup && <CreatePopup Submit={CreateTeamHandler} />}
+      <MainContainer Click={RemovePopup}>
         <SideBar blur={join_team_popup === true || create_team_popup === true}>
           <PersonalInformationHeader username={"hello"} source={DummyLogo} />
           <SearchBar

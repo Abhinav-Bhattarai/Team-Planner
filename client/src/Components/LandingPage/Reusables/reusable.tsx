@@ -8,7 +8,7 @@ export interface FormInputProps {
   id: string;
   placeholder: string;
   value: string;
-  handleChange: () => void;
+  handleChange: (e: any) => void;
 }
 
 interface FormProps {

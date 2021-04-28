@@ -68,7 +68,7 @@ export const ActivityContainer: React.FC<ActivityContainerProps> = (props) => {
 
 const SideBar: React.FC<{ blur: boolean }> = (props) => {
   const { children, blur } = props;
-  const blur_value = blur ? "0px" : "10px";
+  const blur_value = blur ? "10px" : "0px";
   return (
     <React.Fragment>
       <main

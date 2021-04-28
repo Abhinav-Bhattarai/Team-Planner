@@ -7,11 +7,36 @@ export const PopupContainer: React.FC<{}> = (props) => {
   return <main id="main-container-popup">{children}</main>;
 };
 
-export const PopupHeader: React.FC<{}> = (props) => {
-  return <React.Fragment></React.Fragment>;
+export const PopupHeader: React.FC<{title: string}> = (props) => {
+  return (
+    <React.Fragment>
+      <main className='popup-header-container'>
+        <div>{ props.title }</div>
+      </main>
+    </React.Fragment>
+  );
 };
 
-const PopupTextInput: React.FC<FormInputProps> = (props) => {
+export const PopupButton: React.FC<{title: string, Submit?: (e: any) => void}> = (props) => {
+  return (
+    <React.Fragment>
+      <button type='submit' id='popup-btn'> {props.title} </button>
+    </React.Fragment>
+  )
+};
+
+export const PopupSelector: React.FC<{title: string, Submit?: (e: any) => void}> = (props) => {
+  const { title, Submit } = props;
+  return (
+    <React.Fragment>
+      <div onClick={Submit} id='popup-selector'>
+        {title}
+      </div>
+    </React.Fragment>
+  )
+}
+
+export const PopupTextInput: React.FC<FormInputProps> = (props) => {
   const { name, placeholder, handleChange, type, value, id } = props;
   return (
     <React.Fragment>
@@ -29,11 +54,13 @@ const PopupTextInput: React.FC<FormInputProps> = (props) => {
   );
 };
 
-export const PopupForm: React.FC<{}> = (props) => {
-  const { children } = props;
+export const PopupForm: React.FC<{Submit: (e: any) => void}> = (props) => {
+  const { children, Submit } = props;
   return (
     <React.Fragment>
-      <form>{children}</form>
+      <form id='popup-form' onSubmit={Submit}>
+        {children}
+      </form>
     </React.Fragment>
   );
 };
