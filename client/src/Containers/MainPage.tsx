@@ -25,6 +25,7 @@ import Context from "./Context";
 import Spinner from "../Components/UI/Spinner/spinner";
 import JoinPopup from "../Components/MainPage/Popup/join-popup";
 import CreatePopup from "../Components/MainPage/Popup/create-popup";
+import { MainViewHeader } from "../Components/MainPage/MainView/Reusables/reusables";
 
 const client = new ApolloClient({
   uri: "http://localhost:8000/graphql",
@@ -33,6 +34,18 @@ const client = new ApolloClient({
 
 interface PROPS {
   ChangeAuthentication: (type: boolean) => void;
+}
+
+interface SelectedTeam {
+  _id?: string;
+  Members?: Array<string>;
+  Admin?: string;
+  Messages?: Array<string>;
+  GroupProfile?: string;
+  TodoList?: Array<string>;
+  RegistrationDate?: string;
+  Name?: string;
+  error: boolean;
 }
 
 const MainPageWrapper: React.FC<PROPS> = (props) => {
@@ -108,10 +121,12 @@ const MainPage: React.FC<PROPS> = (props) => {
   const { userInfo } = useContext(Context);
   const [team_list, SetTeamList] = useState<null | Array<TeamListObject>>([]);
   const [search_value, SetSearchValue] = useState<string>("");
-  const [team_data, SetTeamData] = useState<null | Array<{}>>(null);
   const [join_team_popup, SetJoinTeamPopup] = useState<boolean>(false);
   const [create_team_popup, SetCreateTeamPopup] = useState<boolean>(false);
-
+  const [
+    selected_team_data,
+    SetSelectedTeamData,
+  ] = useState<null | SelectedTeam >(null);
 
   // graphQL queries;
   const TeamListGQL = useQuery(FetchTeams, {
@@ -128,7 +143,7 @@ const MainPage: React.FC<PROPS> = (props) => {
       SetTeamList(SerializedData);
       SerializedData.length > 0 &&
         TeamData({ variables: { teamID: SerializedData[0].GroupID } });
-      SerializedData.length === 0 && SetTeamData([]);
+      SerializedData.length === 0 && SetSelectedTeamData({error: true});
     },
 
     onError: (err: any) => {},
@@ -136,8 +151,19 @@ const MainPage: React.FC<PROPS> = (props) => {
 
   const [TeamData, { loading }] = useLazyQuery(FetchTeamData, {
     onCompleted: (data) => {
-      const { FetchTeamData } = data;
-      console.log(FetchTeamData, 'FetchTeamData')
+      const response = data.FetchTeamData;;
+      const SerializedData = {
+        _id: response._id,
+        Members: JSON.parse(response.Members),
+        Admin: response.Admin,
+        Messages: JSON.parse(response.Messages),
+        GroupProfile: response.GroupProfile,
+        TodoList: JSON.parse(response.TodoList),
+        RegistrationDate: response.RegistrationDate,
+        Name: response.Name,
+        error: false
+      };
+      SetSelectedTeamData(SerializedData);
     },
 
     fetchPolicy: "cache-and-network",
@@ -149,8 +175,7 @@ const MainPage: React.FC<PROPS> = (props) => {
 
   const [JoinTeam] = useMutation(JoinTeamGQL);
   const [CreateTeam] = useMutation(CreateTeamGQL, {
-    onError: (err: any) => {
-    }
+    onError: (err: any) => {},
   });
 
   // graphQL helper functions;
@@ -174,7 +199,11 @@ const MainPage: React.FC<PROPS> = (props) => {
     }
   };
 
-  const CreateTeamHandler = (event: any, team_name: string, team_profile: string ) => {
+  const CreateTeamHandler = (
+    event: any,
+    team_name: string,
+    team_profile: string
+  ) => {
     event.preventDefault();
     if (team_name.length > 0 && team_profile.length > 10) {
       SetCreateTeamPopup(false);
@@ -187,7 +216,6 @@ const MainPage: React.FC<PROPS> = (props) => {
         },
       });
     }
-
   };
 
   const MainViewRouter = () => {
@@ -249,10 +277,13 @@ const MainPage: React.FC<PROPS> = (props) => {
           {TeamCardContainer}
         </SideBar>
         <MainView blur={join_team_popup === true || create_team_popup === true}>
-          {loading === true || team_data === null ? (
+          {loading === true || selected_team_data === null ? (
             <MainViewLoader />
-          ) : team_data.length > 0 ? (
-            <MainViewRouter />
+          ) : selected_team_data.error === false ? (
+            <>
+              <MainViewHeader Profile={selected_team_data.GroupProfile} name={selected_team_data.Name}/>
+              <MainViewRouter />
+            </>
           ) : (
             <NoDataPage />
           )}

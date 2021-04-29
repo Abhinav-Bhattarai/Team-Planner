@@ -1,0 +1,20 @@
+#main-view-header {
+    padding: 12px 4%;
+    display: flex;
+    background-color: #33353a;
+    align-items: center;
+
+    img {
+        width: 60px;
+        height: 60px;
+        border-radius: 30px;
+        border: 2px solid grey;
+    }
+
+    div {
+        margin-left: 4%;
+        font-weight: 500;
+        color: grey;
+        font-size: 18px
+    };
+}
