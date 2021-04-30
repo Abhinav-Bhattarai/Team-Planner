@@ -20,7 +20,7 @@ interface userInfoProps {
 
 interface AuthGuardProps {
   auth_status: boolean;
-  userInfo: userInfoProps;
+  userInfo?: userInfoProps;
   ChangeAuthentication: (type: boolean) => void;
 }
 
@@ -30,14 +30,14 @@ const AuthenticationGuard: React.FC<AuthGuardProps> = (props) => {
     return (
       // @ts-ignore
       <Context.Provider value={{ userInfo }}>
-        <Suspense fallback={() => <LoadingPage />}>
+        <Suspense fallback={<LoadingPage />}>
           <AsyncMainPage ChangeAuthentication={ChangeAuthentication} />
         </Suspense>
       </Context.Provider>
     );
   }
   return (
-    <Suspense fallback={() => <LoadingPage />}>
+    <Suspense fallback={<LoadingPage />}>
       <AsyncLandingPage ChangeAuthentication={ChangeAuthentication} />
     </Suspense>
   );
@@ -88,7 +88,12 @@ function App() {
             ChangeAuthentication={(type: boolean) => ChangeAuthentication(type)}
             userInfo={userInfo}
           />
-        ) : null}
+        ) : (
+          <AuthenticationGuard
+            auth_status={auth_status}
+            ChangeAuthentication={(type: boolean) => ChangeAuthentication(type)}
+          />
+        )}
       </BrowserRouter>
     </React.Fragment>
   );

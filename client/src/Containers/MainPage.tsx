@@ -123,10 +123,7 @@ const MainPage: React.FC<PROPS> = (props) => {
   const [search_value, SetSearchValue] = useState<string>("");
   const [join_team_popup, SetJoinTeamPopup] = useState<boolean>(false);
   const [create_team_popup, SetCreateTeamPopup] = useState<boolean>(false);
-  const [
-    selected_team_data,
-    SetSelectedTeamData,
-  ] = useState<null | SelectedTeam >(null);
+  const [selected_team_data, SetSelectedTeamData] = useState<null | SelectedTeam >(null);
 
   // graphQL queries;
   const TeamListGQL = useQuery(FetchTeams, {
@@ -238,7 +235,7 @@ const MainPage: React.FC<PROPS> = (props) => {
 
   let TeamCardContainer: any = <NoDataSideBar />;
 
-  if (team_list) {
+  if (team_list && TeamListGQL.loading === false) {
     if (team_list.length > 0) {
       TeamCardContainer = team_list.map((team) => {
         return (
@@ -252,7 +249,11 @@ const MainPage: React.FC<PROPS> = (props) => {
         );
       });
     }
-  }
+  };
+
+  if (TeamListGQL.loading === true) {
+    TeamCardContainer = <MainViewLoader/>
+  };
 
   const RemovePopup = (event: any) => {
     join_team_popup && SetJoinTeamPopup(false);
@@ -265,7 +266,7 @@ const MainPage: React.FC<PROPS> = (props) => {
       {create_team_popup && <CreatePopup Submit={CreateTeamHandler} />}
       <MainContainer Click={RemovePopup}>
         <SideBar blur={join_team_popup === true || create_team_popup === true}>
-          <PersonalInformationHeader username={"hello"} source={DummyLogo} />
+          <PersonalInformationHeader username={localStorage.getItem('Username')} source={DummyLogo} />
           <SearchBar
             value={search_value}
             ChangeValue={(e: any) => ChangeSearchValue(e)}

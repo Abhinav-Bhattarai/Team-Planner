@@ -12,3 +12,11 @@ export const MainViewHeader: React.FC<{Profile: string | undefined, name: string
         </React.Fragment>
     )
 };
+
+export const MainViewNavbar = () => {
+    return (
+        <React.Fragment>
+            
+        </React.Fragment>
+    )
+};

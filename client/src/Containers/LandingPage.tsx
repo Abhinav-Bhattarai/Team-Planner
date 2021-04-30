@@ -143,6 +143,8 @@ const LandingPage: React.FC<PROPS> = ({ ChangeAuthentication }) => {
     },
   });
 
+  console.log('landingPage')
+
   return (
     <React.Fragment>
       <Switch>

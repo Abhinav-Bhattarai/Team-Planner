@@ -1,20 +1,27 @@
 #main-view-header {
-    padding: 12px 4%;
+    padding: 10px 4%;
     display: flex;
     background-color: #33353a;
     align-items: center;
 
     img {
-        width: 60px;
-        height: 60px;
-        border-radius: 30px;
-        border: 2px solid grey;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        border: 3px solid grey;
     }
 
     div {
-        margin-left: 4%;
+        margin-left: 2.34567%;
         font-weight: 500;
         color: grey;
-        font-size: 18px
+        font-size: 18px;
+
+        &::before {
+            content: '@';
+            font-weight: 500;
+            color: grey;
+            font-size: 18px;
+        }
     };
 }
