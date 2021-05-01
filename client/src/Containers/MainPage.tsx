@@ -25,7 +25,7 @@ import Context from "./Context";
 import Spinner from "../Components/UI/Spinner/spinner";
 import JoinPopup from "../Components/MainPage/Popup/join-popup";
 import CreatePopup from "../Components/MainPage/Popup/create-popup";
-import { MainViewHeader } from "../Components/MainPage/MainView/Reusables/reusables";
+import { MainViewHeader, MainViewNavbar } from "../Components/MainPage/MainView/Reusables/reusables";
 
 const client = new ApolloClient({
   uri: "http://localhost:8000/graphql",
@@ -124,7 +124,7 @@ const MainPage: React.FC<PROPS> = (props) => {
   const [join_team_popup, SetJoinTeamPopup] = useState<boolean>(false);
   const [create_team_popup, SetCreateTeamPopup] = useState<boolean>(false);
   const [selected_team_data, SetSelectedTeamData] = useState<null | SelectedTeam >(null);
-
+  
   // graphQL queries;
   const TeamListGQL = useQuery(FetchTeams, {
     variables: {
@@ -283,6 +283,9 @@ const MainPage: React.FC<PROPS> = (props) => {
           ) : selected_team_data.error === false ? (
             <>
               <MainViewHeader Profile={selected_team_data.GroupProfile} name={selected_team_data.Name}/>
+              <MainViewNavbar>
+
+              </MainViewNavbar>
               <MainViewRouter />
             </>
           ) : (
