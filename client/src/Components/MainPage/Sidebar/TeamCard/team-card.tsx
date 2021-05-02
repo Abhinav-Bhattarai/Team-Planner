@@ -14,6 +14,7 @@ const TeamCard: React.FC<TeamCardProps> = (props) => {
     <React.Fragment>
       <main className="team-card-container" onClick={PressHandler.bind(this, TeamID)}>
         <img
+          draggable='false'
           id="team-card-profile"
           width="50px"
           height="50px"

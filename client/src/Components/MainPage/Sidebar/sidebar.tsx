@@ -21,7 +21,7 @@ export const PersonalInformationHeader: React.FC<PersonalInformationHeaderProps>
       className="personal-info-header"
       style={{ backgroundColor: "#292B2F" }}
     >
-      <img src={source} alt="profile" width="30px" height="30px" />
+      <img src={source} draggable='false' alt="profile" width="30px" height="30px" />
       <div>{username}</div>
     </header>
   );

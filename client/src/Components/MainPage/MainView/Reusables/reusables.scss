@@ -24,4 +24,35 @@
             font-size: 18px;
         }
     };
+};
+
+.main-view-navbar {
+    display: flex;
+    flex-direction: column;
+    background-color: #292B2F;
+
+    .main-view-navbar-component-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 15px;
+    };
+
+    .main-view-navbar-component {
+        flex: 1;
+        color: grey;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-transform: capitalize;
+        font-weight: bold;
+        cursor: pointer;
+    };
+
+    .main-view-nav-indicator {
+        width: 50%;
+        height: 2px;
+        background-color: grey;
+        transition: 0.3s;
+    }
 }

@@ -28,6 +28,11 @@ app.use(compression({level: 6}));
 
 // Socket initializations;
 io.on('connection', socket => {
+    socket.on('join', (id, userID) => {
+        socket.join(id);
+        socket.broadcast.to(id).emit('client-joined', userID);
+    });
+
     socket.on('disconnect', () => {
         console.log('User Disconnected');
     });

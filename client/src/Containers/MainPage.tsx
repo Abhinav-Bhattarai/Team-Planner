@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
 import {
   ApolloClient,
   ApolloProvider,
@@ -16,7 +16,7 @@ import SideBar, {
 } from "../Components/MainPage/Sidebar/sidebar";
 import MainView from "../Components/MainPage/MainView/main-view";
 import HelperBar from "../Components/MainPage/HelperBar/helperbar";
-import { Route, Switch } from "react-router";
+import { Route, Switch, useHistory } from "react-router";
 import { FetchTeamData, FetchTeams } from "./gql-calls/gql";
 import TeamCard from "../Components/MainPage/Sidebar/TeamCard/team-card";
 import DummyLogo from "../assets/github.svg";
@@ -25,7 +25,16 @@ import Context from "./Context";
 import Spinner from "../Components/UI/Spinner/spinner";
 import JoinPopup from "../Components/MainPage/Popup/join-popup";
 import CreatePopup from "../Components/MainPage/Popup/create-popup";
-import { MainViewHeader, MainViewNavbar } from "../Components/MainPage/MainView/Reusables/reusables";
+import {
+  MainViewHeader,
+  MainViewNavbar,
+  MainViewNavbarComponents,
+  MainViewNavbarContainer,
+  MainViewNavbarIndicator,
+} from "../Components/MainPage/MainView/Reusables/reusables";
+import TodoList from "../Components/MainPage/MainView/Todo/todo";
+import Messages from "../Components/MainPage/MainView/Messages/messages";
+import SocketClient from 'socket.io-client';
 
 const client = new ApolloClient({
   uri: "http://localhost:8000/graphql",
@@ -46,6 +55,11 @@ interface SelectedTeam {
   RegistrationDate?: string;
   Name?: string;
   error: boolean;
+};
+interface TeamListObject {
+  Name: string;
+  GroupProfile: string;
+  GroupID: string;
 }
 
 const MainPageWrapper: React.FC<PROPS> = (props) => {
@@ -58,12 +72,6 @@ const MainPageWrapper: React.FC<PROPS> = (props) => {
   );
 };
 
-interface TeamListObject {
-  Name: string;
-  GroupProfile: string;
-  GroupID: string;
-}
-
 const NoDataPage = () => {
   return (
     <main
@@ -75,7 +83,7 @@ const NoDataPage = () => {
         flexDirection: "column",
       }}
     >
-      <img src={DefaultLogo} alt="default" width="60%" height="350px" />
+      <img src={DefaultLogo} draggable='false' alt="default" width="60%" height="350px" />
       <div style={{ color: "grey", fontSize: "18px", fontWeight: 700 }}>
         You are Lonely ...
       </div>
@@ -119,12 +127,14 @@ const NoDataSideBar = () => {
 
 const MainPage: React.FC<PROPS> = (props) => {
   const { userInfo } = useContext(Context);
+  const [socket, SetSocket] = useState<SocketIOClient.Socket | null>(null);
   const [team_list, SetTeamList] = useState<null | Array<TeamListObject>>([]);
   const [search_value, SetSearchValue] = useState<string>("");
   const [join_team_popup, SetJoinTeamPopup] = useState<boolean>(false);
   const [create_team_popup, SetCreateTeamPopup] = useState<boolean>(false);
-  const [selected_team_data, SetSelectedTeamData] = useState<null | SelectedTeam >(null);
-  
+  const [selected_team_data, SetSelectedTeamData] = useState<null | SelectedTeam>(null);
+  const IndicatorRef = useRef(null);
+  const history = useHistory();
   // graphQL queries;
   const TeamListGQL = useQuery(FetchTeams, {
     variables: {
@@ -140,7 +150,7 @@ const MainPage: React.FC<PROPS> = (props) => {
       SetTeamList(SerializedData);
       SerializedData.length > 0 &&
         TeamData({ variables: { teamID: SerializedData[0].GroupID } });
-      SerializedData.length === 0 && SetSelectedTeamData({error: true});
+      SerializedData.length === 0 && SetSelectedTeamData({ error: true });
     },
 
     onError: (err: any) => {},
@@ -148,7 +158,7 @@ const MainPage: React.FC<PROPS> = (props) => {
 
   const [TeamData, { loading }] = useLazyQuery(FetchTeamData, {
     onCompleted: (data) => {
-      const response = data.FetchTeamData;;
+      const response = data.FetchTeamData;
       const SerializedData = {
         _id: response._id,
         Members: JSON.parse(response.Members),
@@ -158,7 +168,7 @@ const MainPage: React.FC<PROPS> = (props) => {
         TodoList: JSON.parse(response.TodoList),
         RegistrationDate: response.RegistrationDate,
         Name: response.Name,
-        error: false
+        error: false,
       };
       SetSelectedTeamData(SerializedData);
     },
@@ -171,9 +181,7 @@ const MainPage: React.FC<PROPS> = (props) => {
   // graphQL Mutations
 
   const [JoinTeam] = useMutation(JoinTeamGQL);
-  const [CreateTeam] = useMutation(CreateTeamGQL, {
-    onError: (err: any) => {},
-  });
+  const [CreateTeam] = useMutation(CreateTeamGQL);
 
   // graphQL helper functions;
 
@@ -219,8 +227,8 @@ const MainPage: React.FC<PROPS> = (props) => {
     return (
       <React.Fragment>
         <Switch>
-          <Route exact path="/:teamid/todo" />
-          <Route exact path="/:teamid/messages" />
+          <Route exact path="/:teamid/todo" render={() => <TodoList/>}/>
+          <Route exact path="/:teamid/messages" render={() => <Messages/>} />
           <Route component={NoDataPage} />
         </Switch>
       </React.Fragment>
@@ -249,16 +257,61 @@ const MainPage: React.FC<PROPS> = (props) => {
         );
       });
     }
-  };
+  }
 
   if (TeamListGQL.loading === true) {
-    TeamCardContainer = <MainViewLoader/>
-  };
+    TeamCardContainer = <MainViewLoader />;
+  }
 
   const RemovePopup = (event: any) => {
     join_team_popup && SetJoinTeamPopup(false);
     create_team_popup && SetCreateTeamPopup(false);
   };
+
+  const HandleTodoClick = (type: 'left' | 'right'): void => {
+    if (IndicatorRef !== null) {
+      // @ts-ignore
+      IndicatorRef.current.style.transform = 'translate(0px)';
+    };
+    const team_id = selected_team_data?._id;
+    history.push(`/${team_id}/todo`)
+  };
+
+  const HandleMessageClick = (type: 'left' | 'right'): void => {
+    if (IndicatorRef !== null) {
+      // @ts-ignore
+      IndicatorRef.current.style.transform = 'translate(470px)';
+    };
+    const team_id = selected_team_data?._id;
+    history.push(`/${team_id}/messages`)
+  };
+
+  const JoinSocketRoom = useCallback(() => {
+    if (socket) {
+      socket.disconnect();
+    };
+    if (selected_team_data) {
+      const SocketApi = 'http://localhost:8000';
+      const io = SocketClient(SocketApi);
+      // @ts-ignore
+      io.emit('join', selected_team_data._id, localStorage.getItem('userID'));
+      SetSocket(io);
+    }
+  }, [selected_team_data]);
+
+  useEffect(() => {
+    JoinSocketRoom();
+  }, [JoinSocketRoom]);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('client-joined', (userID: string) => {
+      })
+      return () => {
+        socket.removeAllListeners();
+      }
+    }
+  });
 
   return (
     <React.Fragment>
@@ -266,7 +319,10 @@ const MainPage: React.FC<PROPS> = (props) => {
       {create_team_popup && <CreatePopup Submit={CreateTeamHandler} />}
       <MainContainer Click={RemovePopup}>
         <SideBar blur={join_team_popup === true || create_team_popup === true}>
-          <PersonalInformationHeader username={localStorage.getItem('Username')} source={DummyLogo} />
+          <PersonalInformationHeader
+            username={localStorage.getItem("Username")}
+            source={DummyLogo}
+          />
           <SearchBar
             value={search_value}
             ChangeValue={(e: any) => ChangeSearchValue(e)}
@@ -282,9 +338,16 @@ const MainPage: React.FC<PROPS> = (props) => {
             <MainViewLoader />
           ) : selected_team_data.error === false ? (
             <>
-              <MainViewHeader Profile={selected_team_data.GroupProfile} name={selected_team_data.Name}/>
+              <MainViewHeader
+                Profile={selected_team_data.GroupProfile}
+                name={selected_team_data.Name}
+              />
               <MainViewNavbar>
-
+                <MainViewNavbarContainer>
+                  <MainViewNavbarComponents type='left' Click={HandleTodoClick} name='TodoList'/>
+                  <MainViewNavbarComponents type='right' Click={HandleMessageClick} name='Messages'/>
+                </MainViewNavbarContainer>
+                <MainViewNavbarIndicator reference={IndicatorRef}/>
               </MainViewNavbar>
               <MainViewRouter />
             </>

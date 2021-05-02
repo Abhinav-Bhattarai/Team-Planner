@@ -4,6 +4,11 @@
     display: flex;
     align-items: center;
     background-color: #33353a;
+    transition: 0.3s;
+
+    &:hover {
+        background-color: #424244;
+    }
 
     #team-card-profile {
         border-radius: 25px
