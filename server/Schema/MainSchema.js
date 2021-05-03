@@ -1,6 +1,8 @@
 import { createRequire } from "module";
 import GroupModel from "../Model/Group-model.js";
+import MessagesModel from "../Model/Messages-model.js";
 import RegistrationModel from "../Model/RegistrationModel.js";
+import TodoListModel from '../Model/TodoList-Model.js';
 const require = createRequire(import.meta.url);
 const {
   GraphQLObjectType,
@@ -25,6 +27,7 @@ const TodoListSchema = new GraphQLObjectType({
   name: 'TodoListSchema',
   fields: () => {
     return {
+      _id: {type: GraphQLString},
       GroupID: {type: GraphQLString},
       TodoList: {type: GraphQLString},
       Status: {type: GraphQLBoolean}
@@ -36,6 +39,7 @@ const MessagesSchema = new GraphQLObjectType({
   name: 'MessagesSchema',
   fields: () => {
     return {
+      _id: {type: GraphQLString},
       GroupID: {type: GraphQLString},
       Messages: {type: GraphQLString},
       Status: {type: GraphQLBoolean}
@@ -92,6 +96,26 @@ const RootQuery = new GraphQLObjectType({
         }
       },
     },
+
+    FetchTeamTodo: {
+      type: TodoListSchema,
+      args: { teamID: {type: GraphQLString} },
+      resolve: async(_, args) => {
+        const { teamID } = args;
+        console.log(teamID);
+        const response = await TodoListModel.findOne({GroupID: teamID});
+        console.log(response);
+        if (response.length > 0) return {TodoList: JSON.stringify(response.TodoList), _id: response._id};
+      }
+    },
+
+    FetchTeamMessages: {
+      type: MessagesSchema,
+      args: { teamID: {type: GraphQLString} },
+      resolve: async (_, args) => {
+        const { teamID } = args;
+      }
+    }
   },
 });
 
@@ -132,6 +156,10 @@ const Mutation = new GraphQLObjectType({
           const team_response = await TeamData.save();
           User_Info.GroupsJoined.push({GroupID: team_response._id, GroupProfile, Name});
           await User_Info.save();
+          const TodoListData = new TodoListModel({GroupID: User_Info._id});
+          const MessagesData = new MessagesModel({GroupID: User_Info._id});
+          await MessagesData.save();
+          await TodoListData.save();
           return {Status: true};
         }
       }

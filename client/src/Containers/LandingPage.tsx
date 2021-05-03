@@ -143,8 +143,6 @@ const LandingPage: React.FC<PROPS> = ({ ChangeAuthentication }) => {
     },
   });
 
-  console.log('landingPage')
-
   return (
     <React.Fragment>
       <Switch>
@@ -153,7 +151,7 @@ const LandingPage: React.FC<PROPS> = ({ ChangeAuthentication }) => {
           path="/login"
           render={() => {
             return (
-              <Suspense fallback={() => <LoadingPage />}>
+              <Suspense fallback={<LoadingPage />}>
                 <AsyncLogin
                   username={formik_login.values.username_login}
                   password={formik_login.values.password_login}
@@ -174,7 +172,7 @@ const LandingPage: React.FC<PROPS> = ({ ChangeAuthentication }) => {
           path="/signup"
           render={() => {
             return (
-              <Suspense fallback={() => <LoadingPage />}>
+              <Suspense fallback={<LoadingPage />}>
                 <AsyncSignup
                   username={formik_signup.values.username_signup}
                   password={formik_signup.values.password_signup}
@@ -199,7 +197,7 @@ const LandingPage: React.FC<PROPS> = ({ ChangeAuthentication }) => {
         <Route
           render={() => {
             return (
-              <Suspense fallback={() => <LoadingPage />}>
+              <Suspense fallback={<LoadingPage />}>
                 <AsyncLogin
                   username={formik_login.values.username_login}
                   password={formik_login.values.password_login}

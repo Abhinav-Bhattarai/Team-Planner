@@ -29,7 +29,7 @@ import SideBar, {
 import MainView from "../Components/MainPage/MainView/main-view";
 import HelperBar from "../Components/MainPage/HelperBar/helperbar";
 import { Route, Switch, useHistory } from "react-router";
-import { FetchTeamData, FetchTeams } from "./gql-calls/gql";
+import { FetchTeamData, FetchTeams, FetchTeamTodo } from "./gql-calls/gql";
 import TeamCard from "../Components/MainPage/Sidebar/TeamCard/team-card";
 import DummyLogo from "../assets/github.svg";
 import DefaultLogo from "../assets/default.svg";
@@ -60,6 +60,12 @@ const AsyncMessages = React.lazy(
 );
 interface PROPS {
   ChangeAuthentication: (type: boolean) => void;
+};
+
+interface TodoListState {
+  initiator: string;
+  todo: string;
+  status: string;
 }
 
 interface SelectedTeam {
@@ -154,7 +160,8 @@ const MainPage: React.FC<PROPS> = (props) => {
   const [join_team_popup, setJoinTeamPopup] = useState<boolean>(false);
   const [create_team_popup, setCreateTeamPopup] = useState<boolean>(false);
   const [selected_team_data, setSelectedTeamData] = useState<null | SelectedTeam>(null);
-  const [todo_input, setTodoInput] = useState<string>('');
+  const [todo_list, setTodoList] = useState<null | TodoListState>(null);
+  // const [todo_input, setTodoInput] = useState<string>('');
   const IndicatorRef = useRef(null);
   const history = useHistory();
   // graphQL queries;
@@ -170,7 +177,8 @@ const MainPage: React.FC<PROPS> = (props) => {
       const { FetchTeams } = data;
       const SerializedData = JSON.parse(FetchTeams.GroupsJoined);
       setTeamList(SerializedData);
-      SerializedData.length > 0 &&
+      const latest_teamID: null | string = localStorage.getItem('latest-teamID');
+      SerializedData.length > 0 && latest_teamID === null &&
         TeamData({ variables: { teamID: SerializedData[0].GroupID } });
       SerializedData.length === 0 && setSelectedTeamData({ error: true });
     },
@@ -190,6 +198,8 @@ const MainPage: React.FC<PROPS> = (props) => {
         Name: response.Name,
         error: false,
       };
+      const latest_teamID: string | null = localStorage.getItem('latest-teamID');
+      latest_teamID === null && localStorage.setItem('latest-teamID', response._id);
       setSelectedTeamData(SerializedData);
     },
 
@@ -197,6 +207,23 @@ const MainPage: React.FC<PROPS> = (props) => {
 
     onError: (err) => {},
   });
+
+  const [TeamTodoLists] = useLazyQuery(FetchTeamTodo, {
+    onCompleted: (data) => {
+      const { FetchTeamTodo } = data;
+      console.log(FetchTeamTodo);
+    },
+    fetchPolicy: 'cache-and-network'
+  });
+
+  useEffect(() => {
+    const latest_teamID: string | null = localStorage.getItem('latest-teamID');
+    if (latest_teamID) {
+      console.log(latest_teamID)
+      TeamData({ variables: {teamID: latest_teamID} });
+      TeamTodoLists({ variables: {teamID: latest_teamID} });
+    };
+  }, []);
 
   // graphQL Mutations
 
