@@ -21,6 +21,28 @@ const UserSchema = new GraphQLObjectType({
   },
 });
 
+const TodoListSchema = new GraphQLObjectType({
+  name: 'TodoListSchema',
+  fields: () => {
+    return {
+      GroupID: {type: GraphQLString},
+      TodoList: {type: GraphQLString},
+      Status: {type: GraphQLBoolean}
+    }
+  }
+});
+
+const MessagesSchema = new GraphQLObjectType({
+  name: 'MessagesSchema',
+  fields: () => {
+    return {
+      GroupID: {type: GraphQLString},
+      Messages: {type: GraphQLString},
+      Status: {type: GraphQLBoolean}
+    }
+  }
+});
+
 const GroupSchema = new GraphQLObjectType({
   name: "GroupSchema",
   fields: () => {
@@ -28,10 +50,8 @@ const GroupSchema = new GraphQLObjectType({
       _id: { type: GraphQLString },
       Name: { type: GraphQLString },
       Members: { type: GraphQLString },
-      Messages: { type: GraphQLString },
       Admin: { type: GraphQLString },
       GroupProfile: { type: GraphQLString },
-      TodoList: { type: GraphQLString },
       RegistrationDate: { type: GraphQLString },
       Status: { type: GraphQLBoolean }
     };
@@ -64,9 +84,7 @@ const RootQuery = new GraphQLObjectType({
             _id: response._id,
             Members: JSON.stringify(response.Members),
             Admin: response.Admin,
-            Messages: JSON.stringify(response.Messages),
             GroupProfile: response.GroupProfile,
-            TodoList: JSON.stringify(response.TodoList),
             RegistrationDate: response.RegistrationDate,
             Name: response.Name
           };
@@ -116,6 +134,102 @@ const Mutation = new GraphQLObjectType({
           await User_Info.save();
           return {Status: true};
         }
+      }
+    },
+
+    AddTodo: {
+      type: TodoListSchema,
+      args: {
+        initiator: {type: GraphQLString},
+        todo: {type: GraphQLString},
+        teamID: {type: GraphQLString}
+      },
+      resolve: async(_, args) => {
+        const { initiator, todo, teamID } = args;
+        const response = await GroupModel.findOne({_id: teamID});
+        if (response) {
+          const Serialized_Data = {
+            initiator,
+            todo,
+            status: false
+          }
+          response.TodoList.push(Serialized_Data);
+          await response.save();
+          return {Status: true};
+        }
+        return {Status: false};
+      }
+    },
+
+    RemoveTodo: {
+      type: TodoListSchema,
+      args: {
+        todoID: {type: GraphQLString},
+        teamID: {type: GraphQLString}
+      },
+      resolve: async(_, args) => {
+        const { todoID, teamID } = args;
+        const response = await GroupModel.findOne({_id: teamID});
+        if (response) {
+          if (response.TodoList.length > 0) {
+            const data = [...response.TodoList]
+            for (let TODO in data) {
+              if (data[TODO]._id === todoID) {
+                data.splice(TODO, 1);
+                break
+              }
+            }
+            response.TodoList = data;
+            await response.save();
+            return {Status: true};
+          } 
+          return {Status: false};
+        }
+        return {Status: false};
+      }
+    },
+
+    AcceptTodo: {
+      type: TodoListSchema,
+      args: {
+        teamID: {type: GraphQLString},
+        todoID: {type: GraphQLString}
+      },
+      resolve: async(_, args) => {
+        const { todoID, teamID } = args;
+        const response = await GroupModel.findOne({_id: teamID});
+        if (response) {
+          if (response.TodoList.length > 0) {
+            const data = [...response.TodoList]
+            let TODO_INDEX = null;
+            for (let TODO in data) {
+              if (data[TODO]._id === todoID) {
+                TODO_INDEX = TODO;
+                break
+              }
+            };
+            if (TODO_INDEX) {
+              const MemberCount = response.Members.length;
+              const required_todo = data[TODO_INDEX];
+              if (required_todo.approval_count >= (1/3) * MemberCount) {
+                required_todo.status = true;
+                data.splice(TODO_INDEX, 1, required_todo);
+                response.TodoList = data;
+                await response.save();
+                return {Status: true};
+              } else {
+                required_todo.approval_count += 1;
+                data.splice(TODO_INDEX, 1, required_todo);
+                response.TodoList = data;
+                await response.save();
+                return {Status: false};
+              }
+            }
+
+          } 
+          return {Status: false};
+        }
+        return {Status: false};
       }
     }
   }

@@ -11,21 +11,10 @@ const Schema = new mongoose.Schema({
         required: true
     },
 
-    Messages: {
-        type: [{sender: String, date: String, message: String}],
-        default: []
-    },
-
     GroupProfile: {
         type: String,
         data: Buffer,
         required: true
-    },
-
-    TodoList: {
-        // initiator RegisterID
-        type: [{todo: String, initiator: String, status: Boolean}],
-        default: []
     },
 
     Members: {
