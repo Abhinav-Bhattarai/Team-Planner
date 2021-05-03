@@ -1,4 +1,11 @@
-import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
+import React, {
+  Suspense,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   ApolloClient,
   ApolloProvider,
@@ -8,7 +15,12 @@ import {
   useMutation,
 } from "@apollo/client";
 import { MainContainer } from "../Components/MainPage/Reusables/reusables";
-import { CreateTeamGQL, JoinTeamGQL } from "./gql-calls/mutations";
+import {
+  AddTodoMutator,
+  CreateTeamGQL,
+  JoinTeamGQL,
+  RemoveTodoMutator,
+} from "./gql-calls/mutations";
 import SideBar, {
   ActivityContainer,
   PersonalInformationHeader,
@@ -32,15 +44,20 @@ import {
   MainViewNavbarContainer,
   MainViewNavbarIndicator,
 } from "../Components/MainPage/MainView/Reusables/reusables";
-import TodoList from "../Components/MainPage/MainView/Todo/todo";
-import Messages from "../Components/MainPage/MainView/Messages/messages";
-import SocketClient from 'socket.io-client';
+import SocketClient from "socket.io-client";
+import LoadingPage from "../Components/UI/LoadingPage/loadingPage";
 
 const client = new ApolloClient({
   uri: "http://localhost:8000/graphql",
   cache: new InMemoryCache(),
 });
 
+const AsyncTodoList = React.lazy(
+  () => import("../Components/MainPage/MainView/Todo/todo")
+);
+const AsyncMessages = React.lazy(
+  () => import("../Components/MainPage/MainView/Messages/messages")
+);
 interface PROPS {
   ChangeAuthentication: (type: boolean) => void;
 }
@@ -49,13 +66,11 @@ interface SelectedTeam {
   _id?: string;
   Members?: Array<string>;
   Admin?: string;
-  Messages?: Array<string>;
   GroupProfile?: string;
-  TodoList?: Array<string>;
   RegistrationDate?: string;
   Name?: string;
   error: boolean;
-};
+}
 interface TeamListObject {
   Name: string;
   GroupProfile: string;
@@ -83,7 +98,13 @@ const NoDataPage = () => {
         flexDirection: "column",
       }}
     >
-      <img src={DefaultLogo} draggable='false' alt="default" width="60%" height="350px" />
+      <img
+        src={DefaultLogo}
+        draggable="false"
+        alt="default"
+        width="60%"
+        height="350px"
+      />
       <div style={{ color: "grey", fontSize: "18px", fontWeight: 700 }}>
         You are Lonely ...
       </div>
@@ -127,12 +148,13 @@ const NoDataSideBar = () => {
 
 const MainPage: React.FC<PROPS> = (props) => {
   const { userInfo } = useContext(Context);
-  const [socket, SetSocket] = useState<SocketIOClient.Socket | null>(null);
-  const [team_list, SetTeamList] = useState<null | Array<TeamListObject>>([]);
-  const [search_value, SetSearchValue] = useState<string>("");
-  const [join_team_popup, SetJoinTeamPopup] = useState<boolean>(false);
-  const [create_team_popup, SetCreateTeamPopup] = useState<boolean>(false);
-  const [selected_team_data, SetSelectedTeamData] = useState<null | SelectedTeam>(null);
+  const [socket, setSocket] = useState<SocketIOClient.Socket | null>(null);
+  const [team_list, setTeamList] = useState<null | Array<TeamListObject>>([]);
+  const [search_value, setSearchValue] = useState<string>("");
+  const [join_team_popup, setJoinTeamPopup] = useState<boolean>(false);
+  const [create_team_popup, setCreateTeamPopup] = useState<boolean>(false);
+  const [selected_team_data, setSelectedTeamData] = useState<null | SelectedTeam>(null);
+  const [todo_input, setTodoInput] = useState<string>('');
   const IndicatorRef = useRef(null);
   const history = useHistory();
   // graphQL queries;
@@ -147,10 +169,10 @@ const MainPage: React.FC<PROPS> = (props) => {
     onCompleted: (data: any) => {
       const { FetchTeams } = data;
       const SerializedData = JSON.parse(FetchTeams.GroupsJoined);
-      SetTeamList(SerializedData);
+      setTeamList(SerializedData);
       SerializedData.length > 0 &&
         TeamData({ variables: { teamID: SerializedData[0].GroupID } });
-      SerializedData.length === 0 && SetSelectedTeamData({ error: true });
+      SerializedData.length === 0 && setSelectedTeamData({ error: true });
     },
 
     onError: (err: any) => {},
@@ -163,14 +185,12 @@ const MainPage: React.FC<PROPS> = (props) => {
         _id: response._id,
         Members: JSON.parse(response.Members),
         Admin: response.Admin,
-        Messages: JSON.parse(response.Messages),
         GroupProfile: response.GroupProfile,
-        TodoList: JSON.parse(response.TodoList),
         RegistrationDate: response.RegistrationDate,
         Name: response.Name,
         error: false,
       };
-      SetSelectedTeamData(SerializedData);
+      setSelectedTeamData(SerializedData);
     },
 
     fetchPolicy: "cache-and-network",
@@ -182,18 +202,20 @@ const MainPage: React.FC<PROPS> = (props) => {
 
   const [JoinTeam] = useMutation(JoinTeamGQL);
   const [CreateTeam] = useMutation(CreateTeamGQL);
+  const [AddTodo] = useMutation(AddTodoMutator);
+  const [RemoveTodo] = useMutation(RemoveTodoMutator);
 
   // graphQL helper functions;
 
   const ChangeSearchValue = (event: any) => {
     const value = event.target.value;
-    SetSearchValue(value);
+    setSearchValue(value);
   };
 
   const JoinTeamHandler = (event: any, teamID: string) => {
     event.preventDefault();
     if (teamID.length > 2) {
-      SetJoinTeamPopup(false);
+      setJoinTeamPopup(false);
       JoinTeam({
         variables: {
           // @ts-ignore
@@ -204,6 +226,22 @@ const MainPage: React.FC<PROPS> = (props) => {
     }
   };
 
+  const AddTodoListHandler = () => {
+    AddTodo({
+      variables: {
+
+      }
+    })
+  };
+
+  const RemoveTodoListHandler = () => {
+    RemoveTodo({
+      variables: {
+
+      }
+    })
+  }
+
   const CreateTeamHandler = (
     event: any,
     team_name: string,
@@ -211,7 +249,7 @@ const MainPage: React.FC<PROPS> = (props) => {
   ) => {
     event.preventDefault();
     if (team_name.length > 0 && team_profile.length > 10) {
-      SetCreateTeamPopup(false);
+      setCreateTeamPopup(false);
       CreateTeam({
         variables: {
           // @ts-ignore
@@ -227,9 +265,37 @@ const MainPage: React.FC<PROPS> = (props) => {
     return (
       <React.Fragment>
         <Switch>
-          <Route exact path="/:teamid/todo" render={() => <TodoList/>}/>
-          <Route exact path="/:teamid/messages" render={() => <Messages/>} />
-          <Route component={NoDataPage} />
+          <Route
+            exact
+            path="/:teamid/todo"
+            render={() => {
+              return (
+                <Suspense fallback={<LoadingPage />}>
+                  <AsyncTodoList />
+                </Suspense>
+              );
+            }}
+          />
+          <Route
+            exact
+            path="/:teamid/messages"
+            render={() => {
+              return (
+                <Suspense fallback={<LoadingPage />}>
+                  <AsyncMessages />
+                </Suspense>
+              );
+            }}
+          />
+          <Route
+            render={() => {
+              return (
+                <Suspense fallback={<LoadingPage />}>
+                  <AsyncTodoList />
+                </Suspense>
+              );
+            }}
+          />
         </Switch>
       </React.Fragment>
     );
@@ -264,38 +330,38 @@ const MainPage: React.FC<PROPS> = (props) => {
   }
 
   const RemovePopup = (event: any) => {
-    join_team_popup && SetJoinTeamPopup(false);
-    create_team_popup && SetCreateTeamPopup(false);
+    join_team_popup && setJoinTeamPopup(false);
+    create_team_popup && setCreateTeamPopup(false);
   };
 
-  const HandleTodoClick = (type: 'left' | 'right'): void => {
+  const HandleTodoClick = (type: "left" | "right"): void => {
     if (IndicatorRef !== null) {
       // @ts-ignore
-      IndicatorRef.current.style.transform = 'translate(0px)';
-    };
+      IndicatorRef.current.style.transform = "translate(0px)";
+    }
     const team_id = selected_team_data?._id;
-    history.push(`/${team_id}/todo`)
+    history.push(`/${team_id}/todo`);
   };
 
-  const HandleMessageClick = (type: 'left' | 'right'): void => {
+  const HandleMessageClick = (type: "left" | "right"): void => {
     if (IndicatorRef !== null) {
       // @ts-ignore
-      IndicatorRef.current.style.transform = 'translate(470px)';
-    };
+      IndicatorRef.current.style.transform = "translate(470px)";
+    }
     const team_id = selected_team_data?._id;
-    history.push(`/${team_id}/messages`)
+    history.push(`/${team_id}/messages`);
   };
 
   const JoinSocketRoom = useCallback(() => {
     if (socket) {
       socket.disconnect();
-    };
+    }
     if (selected_team_data) {
-      const SocketApi = 'http://localhost:8000';
+      const SocketApi = "http://localhost:8000";
       const io = SocketClient(SocketApi);
       // @ts-ignore
-      io.emit('join', selected_team_data._id, localStorage.getItem('userID'));
-      SetSocket(io);
+      io.emit("join", selected_team_data._id, localStorage.getItem("userID"));
+      setSocket(io);
     }
   }, [selected_team_data]);
 
@@ -305,11 +371,12 @@ const MainPage: React.FC<PROPS> = (props) => {
 
   useEffect(() => {
     if (socket) {
-      socket.on('client-joined', (userID: string) => {
-      })
+      socket.on("client-joined", (userID: string) => {
+        console.log(userID);
+      });
       return () => {
         socket.removeAllListeners();
-      }
+      };
     }
   });
 
@@ -328,8 +395,8 @@ const MainPage: React.FC<PROPS> = (props) => {
             ChangeValue={(e: any) => ChangeSearchValue(e)}
           />
           <ActivityContainer
-            JoinTeamHandler={() => SetJoinTeamPopup(!join_team_popup)}
-            CreateTeamHandler={() => SetCreateTeamPopup(!create_team_popup)}
+            JoinTeamHandler={() => setJoinTeamPopup(!join_team_popup)}
+            CreateTeamHandler={() => setCreateTeamPopup(!create_team_popup)}
           />
           {TeamCardContainer}
         </SideBar>
@@ -344,10 +411,18 @@ const MainPage: React.FC<PROPS> = (props) => {
               />
               <MainViewNavbar>
                 <MainViewNavbarContainer>
-                  <MainViewNavbarComponents type='left' Click={HandleTodoClick} name='TodoList'/>
-                  <MainViewNavbarComponents type='right' Click={HandleMessageClick} name='Messages'/>
+                  <MainViewNavbarComponents
+                    type="left"
+                    Click={HandleTodoClick}
+                    name="TodoList"
+                  />
+                  <MainViewNavbarComponents
+                    type="right"
+                    Click={HandleMessageClick}
+                    name="Messages"
+                  />
                 </MainViewNavbarContainer>
-                <MainViewNavbarIndicator reference={IndicatorRef}/>
+                <MainViewNavbarIndicator reference={IndicatorRef} />
               </MainViewNavbar>
               <MainViewRouter />
             </>

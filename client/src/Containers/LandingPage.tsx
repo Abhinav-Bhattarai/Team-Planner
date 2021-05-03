@@ -118,15 +118,15 @@ const SignupHandler = async (
 };
 
 const LandingPage: React.FC<PROPS> = ({ ChangeAuthentication }) => {
-  const [signup_spinner, SetSignupSpinner] = useState<boolean>(false);
-  const [login_spinner, SetLoginSpinner] = useState<boolean>(false);
+  const [signup_spinner, setSignupSpinner] = useState<boolean>(false);
+  const [login_spinner, setLoginSpinner] = useState<boolean>(false);
 
   const formik_signup = useFormik({
     initialValues: SignupValues,
     onSubmit: async (values) => {
-      SetSignupSpinner(true);
+      setSignupSpinner(true);
       const response = await SignupHandler(values, ChangeAuthentication);
-      response && SetSignupSpinner(response);
+      response && setSignupSpinner(response);
     },
     validate: (values) => {
       let errors = {};
@@ -137,9 +137,9 @@ const LandingPage: React.FC<PROPS> = ({ ChangeAuthentication }) => {
   const formik_login = useFormik({
     initialValues: LoginValues,
     onSubmit: async (values) => {
-      SetLoginSpinner(true);
+      setLoginSpinner(true);
       const response = await LoginHandler(values, ChangeAuthentication);
-      response && SetLoginSpinner(response);
+      response && setLoginSpinner(response);
     },
   });
 

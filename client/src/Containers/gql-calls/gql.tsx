@@ -14,9 +14,7 @@ export const FetchTeamData = gql`
             _id,
            Name,
            Members,
-           Messages,
            Admin,
-           TodoList,
            RegistrationDate,
            GroupProfile
         }
