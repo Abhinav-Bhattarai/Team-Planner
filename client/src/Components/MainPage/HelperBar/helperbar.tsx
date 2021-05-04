@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useMemo } from "react";
 import "./helperbar.scss";
 
 const HelperBar: React.FC<{ blur: boolean }> = (props) => {
   const { blur, children } = props;
-  const blur_value = blur ? "10px" : "0px";
+  const blur_value = useMemo(() => blur ? "6px" : "0px", [blur]);
   return (
     <React.Fragment>
       <main

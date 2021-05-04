@@ -26,7 +26,6 @@ interface AuthGuardProps {
 
 const AuthenticationGuard: React.FC<AuthGuardProps> = (props) => {
   const { auth_status, ChangeAuthentication, userInfo } = props;
-  console.log(auth_status);
   if (auth_status === true) {
     return (
       // @ts-ignore

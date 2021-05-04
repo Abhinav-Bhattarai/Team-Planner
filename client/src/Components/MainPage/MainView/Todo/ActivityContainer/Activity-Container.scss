@@ -1,0 +1,25 @@
+#td-list-activity-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .activity-btn {
+        width: 30%;
+        margin: 0 5%;
+        border: none;
+        border-radius: 6px;
+        padding: 16px 0;
+        color: #fff;
+        font-weight: bold;
+        transition: 0.5s;
+    
+        &:focus {
+            outline: none;
+        }
+
+        &:hover {
+            transform: scale(1.05, 1.05);
+            background-color: #56d499
+        }
+    };
+}

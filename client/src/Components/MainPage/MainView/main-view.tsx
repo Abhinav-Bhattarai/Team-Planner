@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useMemo } from "react";
 import "./main-view.scss";
 
 const MainView: React.FC<{ blur: boolean }> = (props) => {
   const { children, blur } = props;
-  const blur_value = blur ? "10px" : "0px";
+  const blur_value = useMemo(() => blur ? "6px" : "0px", [blur]);
   return (
     <React.Fragment>
       <main

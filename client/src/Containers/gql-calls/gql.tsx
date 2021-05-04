@@ -25,7 +25,6 @@ export const FetchTeamTodo = gql`
   query($teamID: String!) {
     FetchTeamTodo(teamID: $teamID) {
       TodoList
-      _id
     }
   }
 `;

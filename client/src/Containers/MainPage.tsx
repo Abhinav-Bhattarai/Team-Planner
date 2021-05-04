@@ -46,11 +46,24 @@ import {
 } from "../Components/MainPage/MainView/Reusables/reusables";
 import SocketClient from "socket.io-client";
 import LoadingPage from "../Components/UI/LoadingPage/loadingPage";
+import TodoCard from "../Components/MainPage/MainView/Todo/TodoCard/todo-card";
+import TodoListActivityContainer, {TodoActivityButton} from "../Components/MainPage/MainView/Todo/ActivityContainer/Activity-Container";
+import LRU from 'lru-cache';
 
 const client = new ApolloClient({
   uri: "http://localhost:8000/graphql",
   cache: new InMemoryCache(),
 });
+
+const MS_TO_SECONDS_3_DAYS = 1000 * 60 * 60 * 24 * 3;
+
+const cache = new LRU({
+  max: 1000000,
+  length: function(value: any, key){ return value.length },
+  maxAge: MS_TO_SECONDS_3_DAYS
+});
+
+console.log(cache);
 
 const AsyncTodoList = React.lazy(
   () => import("../Components/MainPage/MainView/Todo/todo")
@@ -60,12 +73,13 @@ const AsyncMessages = React.lazy(
 );
 interface PROPS {
   ChangeAuthentication: (type: boolean) => void;
-};
+}
 
-interface TodoListState {
+export interface TodoListState {
   initiator: string;
   todo: string;
   status: string;
+  _id: string;
 }
 
 interface SelectedTeam {
@@ -159,8 +173,12 @@ const MainPage: React.FC<PROPS> = (props) => {
   const [search_value, setSearchValue] = useState<string>("");
   const [join_team_popup, setJoinTeamPopup] = useState<boolean>(false);
   const [create_team_popup, setCreateTeamPopup] = useState<boolean>(false);
-  const [selected_team_data, setSelectedTeamData] = useState<null | SelectedTeam>(null);
-  const [todo_list, setTodoList] = useState<null | TodoListState>(null);
+  const [
+    selected_team_data,
+    setSelectedTeamData,
+  ] = useState<null | SelectedTeam>(null);
+  const [todo_popup, setTodoPopup] = useState<boolean>(false);
+  const [todo_list, setTodoList] = useState<null | Array<TodoListState>>(null);
   // const [todo_input, setTodoInput] = useState<string>('');
   const IndicatorRef = useRef(null);
   const history = useHistory();
@@ -177,9 +195,13 @@ const MainPage: React.FC<PROPS> = (props) => {
       const { FetchTeams } = data;
       const SerializedData = JSON.parse(FetchTeams.GroupsJoined);
       setTeamList(SerializedData);
-      const latest_teamID: null | string = localStorage.getItem('latest-teamID');
-      SerializedData.length > 0 && latest_teamID === null &&
-        TeamData({ variables: { teamID: SerializedData[0].GroupID } });
+      const latest_teamID: null | string = localStorage.getItem(
+        "latest-teamID"
+      );
+      SerializedData.length > 0 &&
+        latest_teamID === null &&
+        TeamTodoLists({ variables: { teamID: SerializedData[0].GroupID } });
+      TeamData({ variables: { teamID: SerializedData[0].GroupID } });
       SerializedData.length === 0 && setSelectedTeamData({ error: true });
     },
 
@@ -198,8 +220,11 @@ const MainPage: React.FC<PROPS> = (props) => {
         Name: response.Name,
         error: false,
       };
-      const latest_teamID: string | null = localStorage.getItem('latest-teamID');
-      latest_teamID === null && localStorage.setItem('latest-teamID', response._id);
+      const latest_teamID: string | null = localStorage.getItem(
+        "latest-teamID"
+      );
+      latest_teamID === null &&
+        localStorage.setItem("latest-teamID", response._id);
       setSelectedTeamData(SerializedData);
     },
 
@@ -211,18 +236,20 @@ const MainPage: React.FC<PROPS> = (props) => {
   const [TeamTodoLists] = useLazyQuery(FetchTeamTodo, {
     onCompleted: (data) => {
       const { FetchTeamTodo } = data;
-      console.log(FetchTeamTodo);
+      if (FetchTeamTodo) {
+        const Serialized_Data = JSON.parse(FetchTeamTodo.TodoList);
+        setTodoList(Serialized_Data);
+      }
     },
-    fetchPolicy: 'cache-and-network'
+    fetchPolicy: "cache-and-network",
   });
 
   useEffect(() => {
-    const latest_teamID: string | null = localStorage.getItem('latest-teamID');
+    const latest_teamID: string | null = localStorage.getItem("latest-teamID");
     if (latest_teamID) {
-      console.log(latest_teamID)
-      TeamData({ variables: {teamID: latest_teamID} });
-      TeamTodoLists({ variables: {teamID: latest_teamID} });
-    };
+      TeamData({ variables: { teamID: latest_teamID } });
+      TeamTodoLists({ variables: { teamID: latest_teamID } });
+    }
   }, []);
 
   // graphQL Mutations
@@ -255,19 +282,15 @@ const MainPage: React.FC<PROPS> = (props) => {
 
   const AddTodoListHandler = () => {
     AddTodo({
-      variables: {
-
-      }
-    })
+      variables: {},
+    });
   };
 
   const RemoveTodoListHandler = () => {
     RemoveTodo({
-      variables: {
-
-      }
-    })
-  }
+      variables: {},
+    });
+  };
 
   const CreateTeamHandler = (
     event: any,
@@ -278,6 +301,7 @@ const MainPage: React.FC<PROPS> = (props) => {
     if (team_name.length > 0 && team_profile.length > 10) {
       setCreateTeamPopup(false);
       CreateTeam({
+
         variables: {
           // @ts-ignore
           admin: userInfo.userID,
@@ -298,7 +322,29 @@ const MainPage: React.FC<PROPS> = (props) => {
             render={() => {
               return (
                 <Suspense fallback={<LoadingPage />}>
-                  <AsyncTodoList />
+                  <AsyncTodoList TodoList={todo_list}>
+                    <TodoListActivityContainer>
+                      <TodoActivityButton
+                        name="Add Todo"
+                        Click={() => setTodoPopup(true)}
+                        color="#44B581"
+                      />
+                    </TodoListActivityContainer>
+                    {todo_list
+                      ? todo_list.length > 0 &&
+                        todo_list.map((element) => {
+                          return (
+                            <TodoCard
+                              _id={element._id}
+                              initiator={element.initiator}
+                              todo={element.todo}
+                              status={element.todo}
+                              key={element._id}
+                            />
+                          );
+                        })
+                      : null}
+                  </AsyncTodoList>
                 </Suspense>
               );
             }}
@@ -318,7 +364,29 @@ const MainPage: React.FC<PROPS> = (props) => {
             render={() => {
               return (
                 <Suspense fallback={<LoadingPage />}>
-                  <AsyncTodoList />
+                  <AsyncTodoList TodoList={todo_list}>
+                    <TodoListActivityContainer>
+                      <TodoActivityButton
+                        name="Add Todo"
+                        Click={() => setTodoPopup(true)}
+                        color="#44B581"
+                      />
+                    </TodoListActivityContainer>
+                    {todo_list
+                      ? todo_list.length > 0 &&
+                        todo_list.map((element) => {
+                          return (
+                            <TodoCard
+                              key={element._id}
+                              _id={element._id}
+                              initiator={element.initiator}
+                              todo={element.todo}
+                              status={element.todo}
+                            />
+                          );
+                        })
+                      : null}
+                  </AsyncTodoList>
                 </Suspense>
               );
             }}
@@ -359,6 +427,7 @@ const MainPage: React.FC<PROPS> = (props) => {
   const RemovePopup = (event: any) => {
     join_team_popup && setJoinTeamPopup(false);
     create_team_popup && setCreateTeamPopup(false);
+    todo_popup && setTodoPopup(false);
   };
 
   const HandleTodoClick = (type: "left" | "right"): void => {
@@ -384,8 +453,8 @@ const MainPage: React.FC<PROPS> = (props) => {
       socket.disconnect();
     }
     if (selected_team_data) {
-      const SocketApi = "http://localhost:8000";
-      const io = SocketClient(SocketApi);
+      const SocketProxy = "http://localhost:8000";
+      const io = SocketClient(SocketProxy);
       // @ts-ignore
       io.emit("join", selected_team_data._id, localStorage.getItem("userID"));
       setSocket(io);
@@ -398,9 +467,7 @@ const MainPage: React.FC<PROPS> = (props) => {
 
   useEffect(() => {
     if (socket) {
-      socket.on("client-joined", (userID: string) => {
-        console.log(userID);
-      });
+      socket.on("client-joined", (userID: string) => {});
       return () => {
         socket.removeAllListeners();
       };
@@ -412,7 +479,13 @@ const MainPage: React.FC<PROPS> = (props) => {
       {join_team_popup && <JoinPopup SubmitForm={JoinTeamHandler} />}
       {create_team_popup && <CreatePopup Submit={CreateTeamHandler} />}
       <MainContainer Click={RemovePopup}>
-        <SideBar blur={join_team_popup === true || create_team_popup === true}>
+        <SideBar
+          blur={
+            join_team_popup === true ||
+            create_team_popup === true ||
+            todo_popup === true
+          }
+        >
           <PersonalInformationHeader
             username={localStorage.getItem("Username")}
             source={DummyLogo}
@@ -427,7 +500,13 @@ const MainPage: React.FC<PROPS> = (props) => {
           />
           {TeamCardContainer}
         </SideBar>
-        <MainView blur={join_team_popup === true || create_team_popup === true}>
+        <MainView
+          blur={
+            join_team_popup === true ||
+            create_team_popup === true ||
+            todo_popup === true
+          }
+        >
           {loading === true || selected_team_data === null ? (
             <MainViewLoader />
           ) : selected_team_data.error === false ? (
@@ -458,7 +537,7 @@ const MainPage: React.FC<PROPS> = (props) => {
           )}
         </MainView>
         <HelperBar
-          blur={join_team_popup === true || create_team_popup === true}
+          blur={join_team_popup === true || create_team_popup === true || todo_popup === true}
         />
       </MainContainer>
     </React.Fragment>

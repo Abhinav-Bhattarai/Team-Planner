@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import SearchIcon from "../../UI/Icons/search-icon";
 import "./sidebar.scss";
 
@@ -68,7 +68,7 @@ export const ActivityContainer: React.FC<ActivityContainerProps> = (props) => {
 
 const SideBar: React.FC<{ blur: boolean }> = (props) => {
   const { children, blur } = props;
-  const blur_value = blur ? "10px" : "0px";
+  const blur_value = useMemo(() => blur ? "6px" : "0px", [blur]);
   return (
     <React.Fragment>
       <main

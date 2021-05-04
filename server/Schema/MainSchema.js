@@ -102,10 +102,8 @@ const RootQuery = new GraphQLObjectType({
       args: { teamID: {type: GraphQLString} },
       resolve: async(_, args) => {
         const { teamID } = args;
-        console.log(teamID);
         const response = await TodoListModel.findOne({GroupID: teamID});
-        console.log(response);
-        if (response.length > 0) return {TodoList: JSON.stringify(response.TodoList), _id: response._id};
+        if (response) return {TodoList: JSON.stringify(response.TodoList), _id: response._id};
       }
     },
 
@@ -156,8 +154,8 @@ const Mutation = new GraphQLObjectType({
           const team_response = await TeamData.save();
           User_Info.GroupsJoined.push({GroupID: team_response._id, GroupProfile, Name});
           await User_Info.save();
-          const TodoListData = new TodoListModel({GroupID: User_Info._id});
-          const MessagesData = new MessagesModel({GroupID: User_Info._id});
+          const TodoListData = new TodoListModel({GroupID: team_response._id});
+          const MessagesData = new MessagesModel({GroupID: team_response._id});
           await MessagesData.save();
           await TodoListData.save();
           return {Status: true};
