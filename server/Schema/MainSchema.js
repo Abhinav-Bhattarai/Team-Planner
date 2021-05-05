@@ -11,6 +11,9 @@ const {
   GraphQLSchema,
   GraphQLBoolean
 } = require("graphql");
+import { TeamDataCache, TeamListCache } from '../Cache/Caches.js';
+import redis from 'async-redis';
+const cache = redis.createClient();
 
 const UserSchema = new GraphQLObjectType({
   name: "UserSchema",
@@ -70,9 +73,13 @@ const RootQuery = new GraphQLObjectType({
       args: { userID: { type: GraphQLString } },
       resolve: async (_, args) => {
         const { userID } = args;
+        const cache_response = await TeamListCache(userID);
+        if (cache_response) return JSON.parse(cache_response);
         const response = await RegistrationModel.findById(userID);
         if (response !== null) {
-          return { GroupsJoined: JSON.stringify(response.GroupsJoined) };
+          const data =  { GroupsJoined: JSON.stringify(response.GroupsJoined) };
+          await cache.set(`${userID}/todo_list`, JSON.stringify(data));
+          return data;
         }
       },
     },
@@ -82,6 +89,8 @@ const RootQuery = new GraphQLObjectType({
       args: { teamID: { type: GraphQLString } },
       resolve: async (_, args) => {
         const { teamID } = args;
+        const cache_response = await TeamDataCache(teamID);
+        if (cache_response ) return JSON.parse(cache_response);
         const response = await GroupModel.findById(teamID);
         if (response) {
           const data = { 
@@ -92,6 +101,7 @@ const RootQuery = new GraphQLObjectType({
             RegistrationDate: response.RegistrationDate,
             Name: response.Name
           };
+          await cache.set(`${teamID}/teamData`, JSON.stringify(data));
           return data;
         }
       },

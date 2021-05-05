@@ -48,22 +48,11 @@ import SocketClient from "socket.io-client";
 import LoadingPage from "../Components/UI/LoadingPage/loadingPage";
 import TodoCard from "../Components/MainPage/MainView/Todo/TodoCard/todo-card";
 import TodoListActivityContainer, {TodoActivityButton} from "../Components/MainPage/MainView/Todo/ActivityContainer/Activity-Container";
-import LRU from 'lru-cache';
 
 const client = new ApolloClient({
   uri: "http://localhost:8000/graphql",
   cache: new InMemoryCache(),
 });
-
-const MS_TO_SECONDS_3_DAYS = 1000 * 60 * 60 * 24 * 3;
-
-const cache = new LRU({
-  max: 1000000,
-  length: function(value: any, key){ return value.length },
-  maxAge: MS_TO_SECONDS_3_DAYS
-});
-
-console.log(cache);
 
 const AsyncTodoList = React.lazy(
   () => import("../Components/MainPage/MainView/Todo/todo")
@@ -193,16 +182,20 @@ const MainPage: React.FC<PROPS> = (props) => {
 
     onCompleted: (data: any) => {
       const { FetchTeams } = data;
-      const SerializedData = JSON.parse(FetchTeams.GroupsJoined);
-      setTeamList(SerializedData);
-      const latest_teamID: null | string = localStorage.getItem(
-        "latest-teamID"
-      );
-      SerializedData.length > 0 &&
-        latest_teamID === null &&
-        TeamTodoLists({ variables: { teamID: SerializedData[0].GroupID } });
-      TeamData({ variables: { teamID: SerializedData[0].GroupID } });
-      SerializedData.length === 0 && setSelectedTeamData({ error: true });
+      if (FetchTeams.GroupsJoined) {
+        const SerializedData = JSON.parse(FetchTeams.GroupsJoined);
+        const latest_teamID: null | string = localStorage.getItem(
+          "latest-teamID"
+        );
+        setTeamList(SerializedData);
+        if (SerializedData.length > 0 && latest_teamID === null) {
+          TeamTodoLists({ variables: { teamID: SerializedData[0].GroupID } });
+          TeamData({ variables: { teamID: SerializedData[0].GroupID } });
+        } 
+        SerializedData.length === 0 && setSelectedTeamData({ error: true });
+      }else {
+        setSelectedTeamData({ error: true });
+      }
     },
 
     onError: (err: any) => {},
@@ -251,7 +244,6 @@ const MainPage: React.FC<PROPS> = (props) => {
       TeamTodoLists({ variables: { teamID: latest_teamID } });
     }
   }, []);
-
   // graphQL Mutations
 
   const [JoinTeam] = useMutation(JoinTeamGQL);
