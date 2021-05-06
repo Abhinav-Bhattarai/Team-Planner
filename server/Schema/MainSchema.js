@@ -182,7 +182,7 @@ const Mutation = new GraphQLObjectType({
       },
       resolve: async(_, args) => {
         const { initiator, todo, teamID } = args;
-        const response = await GroupModel.findOne({_id: teamID});
+        const response = await TodoListModel.findOne({GroupID: teamID});
         if (response) {
           const Serialized_Data = {
             initiator,
