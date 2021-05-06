@@ -1,6 +1,4 @@
 import React from 'react';
-import SimpleBar from 'simplebar-react';
-import 'simplebar/dist/simplebar.min.css';
 import LoadingPage from '../../../UI/LoadingPage/loadingPage';
 
 const TodoList: React.FC<{TodoList: any | null}> = (props) => {
@@ -14,9 +12,9 @@ const TodoList: React.FC<{TodoList: any | null}> = (props) => {
     }
     return (
         <React.Fragment>
-            <SimpleBar style={{ flex: 1, marginTop: '15px' }}>
+            <main style={{ flex: 1, marginTop: '15px', display: 'flex', flexDirection: 'column' }}>
                 { children }
-            </SimpleBar>
+            </main>
         </React.Fragment>
     )
 }

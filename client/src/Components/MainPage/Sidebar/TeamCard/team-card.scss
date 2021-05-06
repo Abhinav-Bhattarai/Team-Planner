@@ -3,11 +3,11 @@
     margin-top: 2px;
     display: flex;
     align-items: center;
-    background-color: #33353a;
+    background-color: hsl(223, 6%, 21%);
     transition: 0.3s;
 
     &:hover {
-        background-color: #424244;
+        background-color: #424346;
     }
 
     #team-card-profile {
