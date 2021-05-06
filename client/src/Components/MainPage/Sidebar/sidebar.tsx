@@ -1,5 +1,7 @@
 import React, { useMemo } from "react";
 import SearchIcon from "../../UI/Icons/search-icon";
+import SimpleBar from "simplebar-react";
+import "simplebar/dist/simplebar.min.css";
 import "./sidebar.scss";
 
 interface PersonalInformationHeaderProps {
@@ -21,7 +23,13 @@ export const PersonalInformationHeader: React.FC<PersonalInformationHeaderProps>
       className="personal-info-header"
       style={{ backgroundColor: "#292B2F" }}
     >
-      <img src={source} draggable='false' alt="profile" width="30px" height="30px" />
+      <img
+        src={source}
+        draggable="false"
+        alt="profile"
+        width="30px"
+        height="30px"
+      />
       <div>{username}</div>
     </header>
   );
@@ -66,9 +74,18 @@ export const ActivityContainer: React.FC<ActivityContainerProps> = (props) => {
   );
 };
 
+export const SidebarCardContainer: React.FC<{}> = (props) => {
+  const { children } = props;
+  return (
+    <React.Fragment>
+      <SimpleBar style={{ flex: 1, marginTop: "15px" }}>{children}</SimpleBar>
+    </React.Fragment>
+  );
+};
+
 const SideBar: React.FC<{ blur: boolean }> = (props) => {
   const { children, blur } = props;
-  const blur_value = useMemo(() => blur ? "6px" : "0px", [blur]);
+  const blur_value = useMemo(() => (blur ? "6px" : "0px"), [blur]);
   return (
     <React.Fragment>
       <main

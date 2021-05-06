@@ -25,6 +25,7 @@ import SideBar, {
   ActivityContainer,
   PersonalInformationHeader,
   SearchBar,
+  SidebarCardContainer,
 } from "../Components/MainPage/Sidebar/sidebar";
 import MainView from "../Components/MainPage/MainView/main-view";
 import HelperBar from "../Components/MainPage/HelperBar/helperbar";
@@ -48,6 +49,7 @@ import SocketClient from "socket.io-client";
 import LoadingPage from "../Components/UI/LoadingPage/loadingPage";
 import TodoCard from "../Components/MainPage/MainView/Todo/TodoCard/todo-card";
 import TodoListActivityContainer, {TodoActivityButton} from "../Components/MainPage/MainView/Todo/ActivityContainer/Activity-Container";
+import AddTodoPopup from "../Components/MainPage/Popup/add-todo-popup";
 
 const client = new ApolloClient({
   uri: "http://localhost:8000/graphql",
@@ -67,7 +69,7 @@ interface PROPS {
 export interface TodoListState {
   initiator: string;
   todo: string;
-  status: string;
+  status: boolean;
   _id: string;
 }
 
@@ -168,14 +170,12 @@ const MainPage: React.FC<PROPS> = (props) => {
   ] = useState<null | SelectedTeam>(null);
   const [todo_popup, setTodoPopup] = useState<boolean>(false);
   const [todo_list, setTodoList] = useState<null | Array<TodoListState>>(null);
-  // const [todo_input, setTodoInput] = useState<string>('');
   const IndicatorRef = useRef(null);
   const history = useHistory();
   // graphQL queries;
   const TeamListGQL = useQuery(FetchTeams, {
     variables: {
-      // @ts-ignore
-      userID: userInfo.userID,
+      userID: localStorage.getItem('userID'),
     },
 
     fetchPolicy: "cache-and-network",
@@ -243,7 +243,10 @@ const MainPage: React.FC<PROPS> = (props) => {
       TeamData({ variables: { teamID: latest_teamID } });
       TeamTodoLists({ variables: { teamID: latest_teamID } });
     }
-  }, []);
+  }, // eslint-disable-next-line 
+  []);
+
+  console.log(todo_list)
   // graphQL Mutations
 
   const [JoinTeam] = useMutation(JoinTeamGQL);
@@ -260,7 +263,7 @@ const MainPage: React.FC<PROPS> = (props) => {
 
   const JoinTeamHandler = (event: any, teamID: string) => {
     event.preventDefault();
-    if (teamID.length > 2) {
+    if (teamID.length > 5) {
       setJoinTeamPopup(false);
       JoinTeam({
         variables: {
@@ -272,10 +275,26 @@ const MainPage: React.FC<PROPS> = (props) => {
     }
   };
 
-  const AddTodoListHandler = () => {
+  const AddTodoListHandler = (e: any, todo: string) => {
+    // adding to todoList && socket based system development
+    e.preventDefault();
+    const initiator: string | null = localStorage.getItem('userID');
+    if (initiator) {
+      setTodoList([{
+        initiator,
+        _id: 'self',
+        todo,
+        status: false
+      }])
+    };
     AddTodo({
-      variables: {},
+      variables: {
+        initiator: initiator,
+        teamID: selected_team_data?._id,
+        todo: todo
+      },
     });
+    setTodoPopup(false);
   };
 
   const RemoveTodoListHandler = () => {
@@ -330,7 +349,7 @@ const MainPage: React.FC<PROPS> = (props) => {
                               _id={element._id}
                               initiator={element.initiator}
                               todo={element.todo}
-                              status={element.todo}
+                              status={element.status}
                               key={element._id}
                             />
                           );
@@ -373,7 +392,7 @@ const MainPage: React.FC<PROPS> = (props) => {
                               _id={element._id}
                               initiator={element.initiator}
                               todo={element.todo}
-                              status={element.todo}
+                              status={element.status}
                             />
                           );
                         })
@@ -451,7 +470,8 @@ const MainPage: React.FC<PROPS> = (props) => {
       io.emit("join", selected_team_data._id, localStorage.getItem("userID"));
       setSocket(io);
     }
-  }, [selected_team_data]);
+  }, // eslint-disable-next-line 
+  [selected_team_data]);
 
   useEffect(() => {
     JoinSocketRoom();
@@ -470,6 +490,7 @@ const MainPage: React.FC<PROPS> = (props) => {
     <React.Fragment>
       {join_team_popup && <JoinPopup SubmitForm={JoinTeamHandler} />}
       {create_team_popup && <CreatePopup Submit={CreateTeamHandler} />}
+      {todo_popup && <AddTodoPopup Submit={AddTodoListHandler}/>}
       <MainContainer Click={RemovePopup}>
         <SideBar
           blur={
@@ -490,7 +511,9 @@ const MainPage: React.FC<PROPS> = (props) => {
             JoinTeamHandler={() => setJoinTeamPopup(!join_team_popup)}
             CreateTeamHandler={() => setCreateTeamPopup(!create_team_popup)}
           />
-          {TeamCardContainer}
+          <SidebarCardContainer>
+            {TeamCardContainer}
+          </SidebarCardContainer>
         </SideBar>
         <MainView
           blur={
