@@ -10,6 +10,7 @@ interface TeamCardProps {
 
 const TeamCard: React.FC<TeamCardProps> = (props) => {
   const { TeamProfile, TeamName, TeamID, PressHandler } = props;
+  console.log('team-card-rendered')
   return (
     <React.Fragment>
       <main className="team-card-container" onClick={PressHandler.bind(this, TeamID)}>

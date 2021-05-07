@@ -33,6 +33,10 @@ io.on('connection', socket => {
         socket.broadcast.to(id).emit('client-joined', userID);
     });
 
+    socket.on('leave', (roomID) => {
+        
+    })
+
     socket.on('disconnect', () => {
         console.log('User Disconnected');
     });

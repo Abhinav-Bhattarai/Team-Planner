@@ -9,7 +9,9 @@ const TodoList: React.FC<{TodoList: any | null}> = (props) => {
                 <LoadingPage/>
             </React.Fragment>
         )
-    }
+    };
+
+    console.log('rendered');
     return (
         <React.Fragment>
             <main style={{ flex: 1, marginTop: '15px', display: 'flex', flexDirection: 'column' }}>

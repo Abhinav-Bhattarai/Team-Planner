@@ -3,6 +3,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -177,6 +178,22 @@ const MainPage: React.FC<PROPS> = (props) => {
   const [todo_list, setTodoList] = useState<null | Array<TodoListState>>(null);
   const IndicatorRef = useRef(null);
   const history = useHistory();
+  const SortedTodo = useMemo(() => {
+    if (todo_list) {
+      const dummy = [...todo_list];
+      const new_data = [];
+      let todo: any = 0;
+      for (todo in dummy) {
+        if (dummy[todo].status === false) {
+          new_data.push(dummy[todo]);
+        }else {
+          new_data.unshift(dummy[todo]);
+        }
+      }
+      return new_data;
+    }
+    return [];
+  }, [todo_list]);
   // graphQL queries;
   const TeamListGQL = useQuery(FetchTeams, {
     variables: {
@@ -234,7 +251,6 @@ const MainPage: React.FC<PROPS> = (props) => {
   const [TeamTodoLists] = useLazyQuery(FetchTeamTodo, {
     onCompleted: (data) => {
       const { FetchTeamTodo } = data;
-      console.log(JSON.parse(FetchTeamTodo.TodoList));
       if (FetchTeamTodo) {
         const Serialized_Data = JSON.parse(FetchTeamTodo.TodoList);
         setTodoList(Serialized_Data);
@@ -308,7 +324,8 @@ const MainPage: React.FC<PROPS> = (props) => {
     setTodoPopup(false);
   };
 
-  const RemoveTodoListHandler = () => {
+  // eslint-disable-next-line
+  const StatusCompletionHandler = () => {
     RemoveTodo({
       variables: {},
     });
@@ -333,7 +350,7 @@ const MainPage: React.FC<PROPS> = (props) => {
     }
   };
 
-  const MainViewRouter = () => {
+  const MainViewRouter = useMemo(() => {
     return (
       <React.Fragment>
         <Switch>
@@ -343,7 +360,7 @@ const MainPage: React.FC<PROPS> = (props) => {
             render={() => {
               return (
                 <Suspense fallback={<LoadingPage />}>
-                  <AsyncTodoList TodoList={todo_list}>
+                  <AsyncTodoList TodoList={SortedTodo}>
                     <TodoListActivityContainer>
                       <TodoActivityButton
                         name="Add Todo"
@@ -352,9 +369,9 @@ const MainPage: React.FC<PROPS> = (props) => {
                       />
                     </TodoListActivityContainer>
                     <TodoCardsContainer>
-                      {todo_list
-                        ? todo_list.length > 0 &&
-                          todo_list.map((element, index) => {
+                      {SortedTodo
+                        ? SortedTodo.length > 0 &&
+                          SortedTodo.map((element, index) => {
                             return (
                               <TodoCard
                                 _id={element._id}
@@ -388,7 +405,7 @@ const MainPage: React.FC<PROPS> = (props) => {
             render={() => {
               return (
                 <Suspense fallback={<LoadingPage />}>
-                  <AsyncTodoList TodoList={todo_list}>
+                  <AsyncTodoList TodoList={SortedTodo}>
                     <TodoListActivityContainer>
                       <TodoActivityButton
                         name="Add Todo"
@@ -397,9 +414,9 @@ const MainPage: React.FC<PROPS> = (props) => {
                       />
                     </TodoListActivityContainer>
                     <TodoCardsContainer>
-                      {todo_list
-                        ? todo_list.length > 0 &&
-                          todo_list.map((element, index) => {
+                      {SortedTodo
+                        ? SortedTodo.length > 0 &&
+                          SortedTodo.map((element, index) => {
                             return (
                               <TodoCard
                                 _id={element._id}
@@ -421,35 +438,42 @@ const MainPage: React.FC<PROPS> = (props) => {
         </Switch>
       </React.Fragment>
     );
-  };
+  }, [SortedTodo]);
 
   const PressHandler = (teamID: string) => {
-    TeamData({
-      variables: { teamID },
-    });
-  };
-
-  let TeamCardContainer: any = <NoDataSideBar />;
-
-  if (team_list && TeamListGQL.loading === false) {
-    if (team_list.length > 0) {
-      TeamCardContainer = team_list.map((team) => {
-        return (
-          <TeamCard
-            TeamProfile={team.GroupProfile}
-            TeamName={team.Name}
-            TeamID={team.GroupID}
-            key={team.GroupID}
-            PressHandler={(id: string) => PressHandler(id)}
-          />
-        );
+    if (selected_team_data?._id !== teamID) {
+      TeamData({
+        variables: { teamID },
       });
     }
-  }
+  };
 
-  if (TeamListGQL.loading === true) {
-    TeamCardContainer = <MainViewLoader />;
-  }
+  const TeamCardContainer = useMemo(
+    () => {
+      if (team_list) {
+        if (team_list.length > 0) {
+          return team_list.map((team) => {
+            return (
+              <TeamCard
+                TeamProfile={team.GroupProfile}
+                TeamName={team.Name}
+                TeamID={team.GroupID}
+                key={team.GroupID}
+                PressHandler={(id: string) => PressHandler(id)}
+              />
+            );
+          });
+        }
+      }
+
+      if (TeamListGQL.loading === true) {
+        return <MainViewLoader />;
+      }
+
+      return <NoDataSideBar />;
+    }, // eslint-disable-next-line
+    [team_list, TeamListGQL.loading]
+  );
 
   const RemovePopup = (event: any) => {
     join_team_popup && setJoinTeamPopup(false);
@@ -457,7 +481,7 @@ const MainPage: React.FC<PROPS> = (props) => {
     todo_popup && setTodoPopup(false);
   };
 
-  const HandleTodoClick = (type: "left" | "right"): void => {
+  const HandleTodoClick = (): void => {
     if (IndicatorRef !== null) {
       // @ts-ignore
       IndicatorRef.current.style.transform = "translate(0px)";
@@ -466,7 +490,7 @@ const MainPage: React.FC<PROPS> = (props) => {
     history.push(`/${team_id}/todo`);
   };
 
-  const HandleMessageClick = (type: "left" | "right"): void => {
+  const HandleMessageClick = (): void => {
     if (IndicatorRef !== null) {
       // @ts-ignore
       IndicatorRef.current.style.transform = "translate(470px)";
@@ -561,7 +585,7 @@ const MainPage: React.FC<PROPS> = (props) => {
                 </MainViewNavbarContainer>
                 <MainViewNavbarIndicator reference={IndicatorRef} />
               </MainViewNavbar>
-              <MainViewRouter />
+              {MainViewRouter}
             </>
           ) : (
             <NoDataPage />

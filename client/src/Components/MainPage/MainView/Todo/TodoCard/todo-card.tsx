@@ -13,10 +13,10 @@ export const TodoCardsContainer: React.FC<{}> = (props) => {
     )
 };
 
-const TodoCardOverlay: React.FC<{}> = (props) => {
-    const { children } = props;
+const TodoCardOverlay: React.FC<{blur: string}> = (props) => {
+    const { children, blur } = props;
     return (
-        <main className='todo-card-overlay'>
+        <main className='todo-card-overlay' style={{filter: `blur(${blur})`}}>
             { children }
         </main>
     )
@@ -31,10 +31,10 @@ const TodoCardHeader: React.FC<{count: number | undefined}> = (props) => {
     )
 };
 
-const TodoContainer: React.FC<{todo: string}> = (props) => {
-    const { todo } = props;
+const TodoContainer: React.FC<{todo: string, color: string}> = (props) => {
+    const { todo, color } = props;
     return (
-        <main className='todo-container'>
+        <main className='todo-container' style={{color: color}}>
             {todo}
         </main>
     )
@@ -54,16 +54,15 @@ const TodoActivityButton: React.FC<{name: string}> = (props) => {
 }
 
 const TodoCard: React.FC<TodoListState> = (props) => {
-    const { _id, todo, initiator, count } = props;
-    console.log(_id, todo, initiator, count);
+    const { _id, todo, initiator, count, status } = props;
     return (
         <React.Fragment>
-            <TodoCardOverlay>
+            <TodoCardOverlay blur={status ? '1.33px' : '0px'}>
                 <TodoCardHeader count={count}/>
-                <TodoContainer todo={todo}/>
+                <TodoContainer todo={todo} color={status ? 'grey' : '#fff'}/>
                 <TodoActivityContainer>
                     <TodoActivityButton name='Completed ?'/>
-                    <TodoActivityButton name='Completed ?'/>
+              
                 </TodoActivityContainer>
             </TodoCardOverlay>
         </React.Fragment>
